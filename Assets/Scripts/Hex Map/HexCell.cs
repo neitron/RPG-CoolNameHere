@@ -238,6 +238,10 @@ public class HexCell : SerializedMonoBehaviour
 		_specialIndex > 0;
 
 
+	public int viewElevation =>
+		_elevation >= _waterLevel ? _elevation : _waterLevel;
+
+
 
 	[SerializeField, HideInInspector]
 	private int _terrainTypeIndex;

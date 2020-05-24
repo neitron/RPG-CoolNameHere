@@ -9445,7 +9445,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -82832.5, y: 1692760}
+  m_AnchoredPosition: {x: -84821.5, y: 1736000}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &800077185
@@ -16791,7 +16791,7 @@ MonoBehaviour:
   _grid: {fileID: 165097050}
   _fixedSeed:
     enabled: 1
-    value: 1957632474
+    value: 1208905299
   _chunkSizeRange: {x: 30, y: 100}
   _landPercentage: 50
   _waterLevel: 3
@@ -16800,9 +16800,19 @@ MonoBehaviour:
   _mapBorderY: 5
   _regionBorder: 5
   _regionCount: 1
-  _erosionPercentage: 100
+  _erosionPercentage: 50
   _jitterProbability: 0.25
   _highRiseProbability: 0.25
+  _sinkProbability: 0.2
+  _startingMoisture: 0.1
+  _evaporationFactor: 0.5
+  _precipitationFactor: 0.25
+  _runOfFactor: 0.25
+  _seepageFactor: 0.25
+  _windDirection: 5
+  _windStrength: 4
+  _riverPercentage: 10
+  _extraLakeProbability: 0.2
 --- !u!4 &1456942252
 Transform:
   m_ObjectHideFlags: 0

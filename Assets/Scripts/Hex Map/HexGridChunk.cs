@@ -195,7 +195,7 @@ public class HexGridChunk : MonoBehaviour
 		
 		if (cell.IsRiverGoesThroughEdge(direction))
 		{
-			TriangulateEstuary(e1, e2, cell.incomingRiverDirection == direction);
+			TriangulateEstuary(e1, e2, cell.isHasIncomingRiver && cell.incomingRiverDirection == direction);
 		}
 		else
 		{
@@ -570,11 +570,15 @@ public class HexGridChunk : MonoBehaviour
 		_rivers.AddTriangle(center, m.v2, m.v4);
 		if (isReversed)
 		{
-			_rivers.AddTriangleUv(new Vector2(0.5f, 0.4f), new Vector2(1f, 0.2f), new Vector2(0f, 0.2f));
+			_rivers.AddTriangleUv(
+				new Vector2(0.5f, 0.4f),
+				new Vector2(1f, 0.2f), new Vector2(0f, 0.2f));
 		}
 		else
 		{
-			_rivers.AddTriangleUv(new Vector2(0.5f, 0.4f), new Vector2(0f, 0.6f), new Vector2(1f, 0.6f));
+			_rivers.AddTriangleUv(
+				new Vector2(0.5f, 0.4f),
+				new Vector2(0f, 0.6f), new Vector2(1f, 0.6f));
 		}
 	}
 
