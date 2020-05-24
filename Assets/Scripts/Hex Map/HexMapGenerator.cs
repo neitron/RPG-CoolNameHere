@@ -14,7 +14,9 @@ public class HexMapGenerator : MonoBehaviour
 	[Serializable, Toggle("enabled")]
 	public class Toggleable
 	{
+		// ReSharper disable once InconsistentNaming
 		public bool enabled;
+		// ReSharper disable once InconsistentNaming
 		public int value;
 	}
 
@@ -27,7 +29,12 @@ public class HexMapGenerator : MonoBehaviour
 		public int xMax;
 		public int yMin;
 		public int yMax;
+	}
 
+
+	private struct ClimateData
+	{
+		public float clouds;
 	}
 
 
@@ -76,12 +83,21 @@ public class HexMapGenerator : MonoBehaviour
 	[Range(0f, 0.4f)]
 	private float _sinkProbability = 0.2f;
 
+	[Range(0f, 1.0f)]
+	private float _evaporation = 0.5f;
+	
+	[Range(0f, 1.0f)]
+	private float _precipitationFactor = 0.25f;
+
+
 
 	private int _cellCount;
 	private int _searchFrontierPhase;
 	private HexCellPriorityQueue _searchFrontier;
 	private List<MapRegion> _regions;
+	private List<ClimateData> _climate;
 	
+
 
 	public void GenerateMap(int x, int z)
 	{
@@ -111,6 +127,7 @@ public class HexMapGenerator : MonoBehaviour
 		CreateRegions();
 		CreateLand();
 		ErodeLand();
+		CreateClimate();
 		SetTerrainType();
 
 		for (var i = 0; i < _cellCount; i++)
@@ -305,6 +322,62 @@ public class HexMapGenerator : MonoBehaviour
 	}
 
 
+	private void EvolveClimate(int cellIndex)
+	{
+		var cell = _grid[cellIndex];
+		var cellClimate = _climate[cellIndex];
+
+		if (cell.isUnderwater)
+		{
+			cellClimate.clouds += _evaporation;
+		}
+
+		var precipitation = cellClimate.clouds * _precipitationFactor;
+		cellClimate.clouds -= precipitation;
+
+		var cloudDispersal = cellClimate.clouds * (1f / 6f);
+		for (var d = HexDirection.Ne; d <= HexDirection.Nw; d++)
+		{
+			var neighbor = cell[d];
+			if (neighbor == null)
+				continue;
+
+			var neighborClimate = _climate[neighbor.index];
+			neighborClimate.clouds += cloudDispersal;
+			_climate[neighbor.index] = neighborClimate;
+		}
+		cellClimate.clouds = 0;
+		_climate[cellIndex] = cellClimate;
+	}
+
+
+	private void CreateClimate()
+	{
+		if (_climate == null)
+		{
+			_climate = new List<ClimateData>();
+		}
+		else
+		{
+			_climate.Clear();
+		}
+
+		var initialData = new ClimateData();
+		for (int i = 0; i < _cellCount; i++)
+		{
+			_climate.Add(initialData);
+		}
+
+		for (int cycle = 0; cycle < 40; cycle++)
+		{
+			for (int i = 0; i < _cellCount; i++)
+			{
+				EvolveClimate(i);
+			}
+		}
+	}
+
+
 	private void CreateLand()
 	{
 		var landBudget = Mathf.RoundToInt(_cellCount * _landPercentage * 0.01f);
@@ -342,10 +415,12 @@ public class HexMapGenerator : MonoBehaviour
 			var cell = _grid[i];
 			if(!cell.isUnderwater)
 				cell.terrainTypeIndex = cell.elevation - cell.waterLevel;
-			cell.SetMapData(
-				(cell.elevation - _elevationRange.x) /
-				(float)(_elevationRange.y - _elevationRange.x)
-			);
+			
+			// Elevation data
+			//cell.SetMapData((cell.elevation - _elevationRange.x) / (_elevationRange.y - _elevationRange.x));
+			
+			// Climate data
+			cell.SetMapData(_climate[i].clouds);
 		}
 	}
 
