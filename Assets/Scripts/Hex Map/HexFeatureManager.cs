@@ -55,6 +55,9 @@ public class HexFeatureManager : SerializedMonoBehaviour
 
 	public void AddFeature(HexCell cell, Vector3 position)
 	{
+		if (cell.isSpecial)
+			return;
+
 		var hash = HexMetrics.SampleHashGrid(position);
 
 		var prefab = PickPrefab(_urbanPrefabs, cell.urbanLevel, hash.a, hash.d);
@@ -92,11 +95,11 @@ public class HexFeatureManager : SerializedMonoBehaviour
 			return;
 		}
 
-		var featureInstance = Instantiate(prefab, _container, false);
-
+		var featureInstance = Instantiate(prefab);
 		position.y += featureInstance.localScale.y * 0.5f;
 		featureInstance.position = HexMetrics.Perturb(position);
 		featureInstance.localRotation = Quaternion.Euler(0f, 360f * hash.e, 0f);
+		featureInstance.SetParent(_container, false);
 	}
 
 
@@ -359,9 +362,10 @@ public class HexFeatureManager : SerializedMonoBehaviour
 
 	public void AddSpecialFeature(HexCell cell, Vector3 position)
 	{
-		var instance = Instantiate(_specialPrefabs[cell.specialIndex - 1], _container, false);
+		var instance = Instantiate(_specialPrefabs[cell.specialIndex - 1]);
 		instance.localPosition = HexMetrics.Perturb(position);
 		var hash = HexMetrics.SampleHashGrid(position);
 		instance.localRotation = Quaternion.Euler(0f, 360f * hash.e, 0f);
+		instance.SetParent(_container, false);
 	}
 }

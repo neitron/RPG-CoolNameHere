@@ -394,7 +394,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdba026f1ec141144b2453979b08ebd6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _isUseCellData: 0
+  _isUseCellData: 1
   _isUseCollider: 0
   _isUseUv2: 0
   _isUseUv: 0
@@ -492,7 +492,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdba026f1ec141144b2453979b08ebd6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _isUseCellData: 0
+  _isUseCellData: 1
   _isUseCollider: 0
   _isUseUv2: 1
   _isUseUv: 1
@@ -688,7 +688,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdba026f1ec141144b2453979b08ebd6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _isUseCellData: 0
+  _isUseCellData: 1
   _isUseCollider: 0
   _isUseUv2: 0
   _isUseUv: 1
@@ -786,7 +786,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdba026f1ec141144b2453979b08ebd6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _isUseCellData: 0
+  _isUseCellData: 1
   _isUseCollider: 0
   _isUseUv2: 0
   _isUseUv: 1
@@ -1041,7 +1041,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdba026f1ec141144b2453979b08ebd6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _isUseCellData: 0
+  _isUseCellData: 1
   _isUseCollider: 0
   _isUseUv2: 0
   _isUseUv: 1

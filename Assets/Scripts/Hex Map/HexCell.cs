@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using TMPro;
-
+using System.Dynamic;
 
 public class HexCell : SerializedMonoBehaviour
 {
@@ -28,7 +28,18 @@ public class HexCell : SerializedMonoBehaviour
 	public HexDirection outgoingRiverDirection { get; private set; }
 	public bool isHasIncomingRiver { get; private set; }
 	public bool isHasOutgoingRiver { get; private set; }
+	public bool isExplorable { get; set; }
+
 	public HexCellShaderData shaderData { get; set; }
+
+	public HexCell nextWithSamePriority { get; set; }
+	public HexCell pathFrom { get; set; }
+	public HexUnit unit { get; set; }
+
+	public int searchHeuristic { get; set; }
+	public int searchPhase { get; set; }
+	public int columnIndex { get; set; }
+	public int distance { get; set; }
 	public int index { get; set; }
 
 
@@ -57,7 +68,13 @@ public class HexCell : SerializedMonoBehaviour
 			{
 				return;
 			}
+
+			var originalViewElevation = viewElevation;
 			_elevation = value;
+			if (viewElevation != originalViewElevation)
+			{
+				shaderData.ViewElevationChanged();
+			}
 
 			RefreshPosition();
 
@@ -78,8 +95,13 @@ public class HexCell : SerializedMonoBehaviour
 			{
 				return;
 			}
-
+			var originalViewElevation = viewElevation;
 			_waterLevel = value;
+			if (viewElevation != originalViewElevation)
+			{
+				shaderData.ViewElevationChanged();
+			}
+
 			ValidateRivers();
 			Refresh();
 		}
@@ -168,28 +190,13 @@ public class HexCell : SerializedMonoBehaviour
 			RefreshSelfOnly();
 		}
 	}
-
-
-	[ShowInInspector]
-	public int distance
-	{
-		get => _distance;
-		set
-		{
-			_distance = value;
-			UpdateDistanceLabel();
-		}
-	}
-
-
-	public HexCell nextWithSamePriority { get; set; }
-	public int searchHeuristic { get; set; }
-	public HexCell pathFrom { get; set; }
-	public int searchPhase { get; set; }
 	
-
-
-	public int searchPriority => distance + searchHeuristic;
+	[ShowInInspector]
+	public bool isExplored
+	{
+		get => _isExplored && isExplorable;
+		private set => _isExplored = value;
+	}
 
 
 	/// <summary>
@@ -206,7 +213,11 @@ public class HexCell : SerializedMonoBehaviour
 			value.neighbors[(int)direction.Opposite()] = this;
 		}
 	}
-	
+
+
+	public int searchPriority => 
+		distance + searchHeuristic;
+
 	public Vector3 position => 
 		transform.localPosition;
 
@@ -222,6 +233,12 @@ public class HexCell : SerializedMonoBehaviour
 	public bool isUnderwater =>
 		_waterLevel > _elevation;
 
+	public bool isSpecial => 
+		_specialIndex > 0;
+
+	public bool isVisible =>
+		_visibility > 0 && isExplorable;	
+
 	public float streamBedY => 
 		(_elevation + HexMetrics.STREAM_BED_ELEVATION_OFFSET) * HexMetrics.ELEVATION_STEP;
 
@@ -234,8 +251,6 @@ public class HexCell : SerializedMonoBehaviour
 	public HexDirection riverBeginOrEndDirection =>
 		isHasIncomingRiver ? incomingRiverDirection : outgoingRiverDirection;
 
-	public bool isSpecial => 
-		_specialIndex > 0;
 
 
 	public int viewElevation =>
@@ -243,59 +258,50 @@ public class HexCell : SerializedMonoBehaviour
 
 
 
-	[SerializeField, HideInInspector]
-	private int _terrainTypeIndex;
-	
-	[SerializeField, HideInInspector]
-	private int _elevation = int.MinValue;
-
-	[SerializeField, HideInInspector]
 	private int _waterLevel = int.MinValue;
-
-	[SerializeField, HideInInspector]
-	private int _urbanLevel;
-
-	[SerializeField, HideInInspector]
-	private int _farmLevel;
-
-	[SerializeField, HideInInspector]
+	private int _elevation = int.MinValue;
+	private int _terrainTypeIndex;
+	private int _specialIndex;
 	private int _plantLevel;
-
-	[SerializeField, HideInInspector]
+	private int _urbanLevel;
+	private int _visibility;
+	private int _farmLevel;
 	private bool _walled;
 
-	[SerializeField, HideInInspector]
-	private int _specialIndex;
-
-	[SerializeField, HideInInspector] 
-	private int _distance;
 
 
-
-	public HexEdgeType GetEdgeType(HexDirection direction) =>
-		HexMetrics.GetEdgeType(elevation, neighbors[(int) direction].elevation);
-
-
-	public HexEdgeType GetEdgeType(HexCell otherCell) =>
-		HexMetrics.GetEdgeType(elevation, otherCell.elevation);
+	public bool IsRiverGoesThroughEdge(HexDirection direction) => isHasIncomingRiver && incomingRiverDirection == direction || isHasOutgoingRiver && outgoingRiverDirection == direction;
+	public bool IsValidRiverDestination(HexCell neighbor) => neighbor && (elevation >= neighbor.elevation || waterLevel == neighbor.elevation);
+	public HexEdgeType GetEdgeType(HexDirection direction) => HexMetrics.GetEdgeType(elevation, neighbors[(int) direction].elevation);
+	public HexEdgeType GetEdgeType(HexCell otherCell) => HexMetrics.GetEdgeType(elevation, otherCell.elevation);
+	public bool IsRoadGoesThroughEdge(HexDirection direction) => roads[(int) direction];
 	
+	
+	public void IncreaseVisibility()
+	{
+		_visibility++;
 
-	public bool IsRiverGoesThroughEdge(HexDirection direction) =>
-		isHasIncomingRiver && incomingRiverDirection == direction ||
-		isHasOutgoingRiver && outgoingRiverDirection == direction;
+		if (_visibility == 1)
+		{
+			isExplored = true;
+			shaderData.RefreshVisibility(this);
+		}
+	}
 
 
-	public bool IsRoadGoesThroughEdge(HexDirection direction) =>
-		roads[(int) direction];
-
-
-	public bool IsValidRiverDestination(HexCell neighbor) =>
-		neighbor && (elevation >= neighbor.elevation || waterLevel == neighbor.elevation);
+	public void DecreaseVisibility()
+	{
+		_visibility--;
+		if (_visibility == 0)
+		{
+			shaderData.RefreshVisibility(this);
+		}
+	}
 
 
 	public int GetElevationDifference(HexDirection direction)
 	{
-		var difference = elevation - this[direction].elevation;  // TODO: NULL REF HERE
+		var difference = elevation - this[direction].elevation;
 		return difference >= 0 ? difference : -difference;
 	}
 
@@ -320,11 +326,10 @@ public class HexCell : SerializedMonoBehaviour
 		transform.localPosition = pos;
 
 		// TODO: remove UI helper labels from here
-		var labelPosition = _coords.rectTransform.position;
+		var labelPosition = _label.rectTransform.position;
 		labelPosition.y = pos.y + 0.001f;
-		_coords.rectTransform.position = labelPosition;
+		_label.rectTransform.position = labelPosition;
 	}
-
 
 
 	private void ValidateRivers()
@@ -334,7 +339,7 @@ public class HexCell : SerializedMonoBehaviour
 			RemoveOutgoingRiver();
 		}
 
-		if (isHasIncomingRiver && this[incomingRiverDirection].IsValidRiverDestination(this))
+		if (isHasIncomingRiver && !this[incomingRiverDirection].IsValidRiverDestination(this))
 		{
 			RemoveIncomingRiver();
 		}
@@ -384,7 +389,7 @@ public class HexCell : SerializedMonoBehaviour
 		RefreshSelfOnly();
 
 		var neighbor = this[outgoingRiverDirection];
-		neighbor.isHasIncomingRiver = false; // TODO: NULL REF HERE
+		neighbor.isHasIncomingRiver = false;
 		neighbor.RefreshSelfOnly();
 	}
 
@@ -446,6 +451,8 @@ public class HexCell : SerializedMonoBehaviour
 	private void RefreshSelfOnly()
 	{
 		chunk.Refresh();
+		if (unit)
+			unit.ValidateLocation();
 	}
 
 
@@ -455,6 +462,8 @@ public class HexCell : SerializedMonoBehaviour
 			return;
 
 		chunk.Refresh();
+		if (unit)
+			unit.ValidateLocation();
 
 		foreach (var neighbor in neighbors)
 		{
@@ -503,7 +512,9 @@ public class HexCell : SerializedMonoBehaviour
 				roadFlags |= 1 << i;
 			}
 		}
+
 		writer.Write((byte)roadFlags);
+		writer.Write(isExplored);
 	}
 
 
@@ -553,6 +564,9 @@ public class HexCell : SerializedMonoBehaviour
 		{
 			roads[i] = (roadFlags & (1 << i)) != 0;
 		}
+
+		isExplored = header >= 5 && reader.ReadBoolean();
+		shaderData.RefreshVisibility(this);
 	}
 
 
@@ -565,24 +579,21 @@ public class HexCell : SerializedMonoBehaviour
 	#region Temporary UI region
 
 	[SerializeField, UsedImplicitly]
-	private TextMeshPro _coords;
+	private TextMeshPro _label;
+
+	private bool _isExplored;
+
 	public string label
 	{
-		get => _coords.text;
-		set => _coords.text = value;
+		get => _label.text;
+		set => _label.text = value;
 	}
 
 
 	public bool isLabelVisible
 	{
-		get => _coords.enabled;
-		set => _coords.enabled = value;
-	}
-
-
-	void UpdateDistanceLabel()
-	{
-		label = _distance == int.MaxValue ? "" : _distance.ToString();
+		get => _label.enabled;
+		set => _label.enabled = value;
 	}
 
 
@@ -601,6 +612,16 @@ public class HexCell : SerializedMonoBehaviour
 	}
 
 	#endregion
+
+
+	public void ResetVisibility()
+	{
+		if (_visibility > 0)
+		{
+			_visibility = 0;
+			shaderData.RefreshVisibility(this);
+		}
+	}
 
 
 }

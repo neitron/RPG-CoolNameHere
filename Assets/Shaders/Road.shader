@@ -5,7 +5,7 @@
         _Color ("Color", Color) = (1,1,1,1)
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
-        _Metallic ("Metallic", Range(0,1)) = 0.0
+        _Specular ("Specular", Color) = (0.2, 0.2, 0.2)
     }
     SubShader
     {
@@ -18,21 +18,44 @@
 
         CGPROGRAM
         // Physically based Standard lighting model, and enable shadows on all light types
-        #pragma surface surf Standard fullforwardshadows decal:blend
+        #pragma surface surf StandardSpecular fullforwardshadows decal:blend vertex:vert
 
         // Use shader model 3.0 target, to get nicer looking lighting
-        #pragma target 3.0
+        #pragma target 3.5
+
+        #pragma multi_compile _ HEX_MAP_EDIT_MODE
+
+        #include "HexMetrix.cginc"
+        #include "HexCellData.cginc"
 
         sampler2D _MainTex;
+
 
         struct Input
         {
             float2 uv_MainTex;
 			float3 worldPos;
+            float2 visibility;
         };
 
+
+
+        void vert (inout appdata_full v, out Input o) 
+        {
+			UNITY_INITIALIZE_OUTPUT(Input, o);
+
+			float4 cell0 = GetCellData(v, 0);
+			float4 cell1 = GetCellData(v, 1);
+
+			o.visibility.x = cell0.x * v.color.x + cell1.x * v.color.y;
+			o.visibility.x = lerp(0.25, 1, o.visibility.x);
+			o.visibility.y = cell0.y * v.color.x + cell1.y * v.color.y;
+		}
+
+
+
         half _Glossiness;
-        half _Metallic;
+        fixed3 _Specular;
         fixed4 _Color;
 
         // Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
@@ -42,17 +65,20 @@
             // put more per-instance properties here
         UNITY_INSTANCING_BUFFER_END(Props)
 
-        void surf (Input IN, inout SurfaceOutputStandard o)
+        void surf (Input IN, inout SurfaceOutputStandardSpecular o)
         {
-			float4 noise = tex2D(_MainTex, IN.worldPos.xz * 0.025f);
+			float4 noise = tex2D(_MainTex, IN.worldPos.xz * (3 * TILING_SCALE));
 
-            fixed4 c = _Color * (noise.y * 0.75 + 0.25);
+            fixed4 c = _Color * ((noise.y * 0.75 + 0.25) * IN.visibility.x);
 			float blend = smoothstep(0.4, 0.7, IN.uv_MainTex.x * (noise.x + 0.5));
-            
-			o.Albedo = c.rgb;
-            o.Alpha = blend;
 
-            o.Metallic = _Metallic;
+            float explored = IN.visibility.y;
+			o.Albedo = c.rgb;
+            o.Alpha = blend * explored;
+
+            o.Specular = _Specular * explored;
+            o.Occlusion = explored;
+
             o.Smoothness = _Glossiness;
         }
         ENDCG

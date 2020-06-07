@@ -36,9 +36,15 @@ public class HexMapCamera : MonoBehaviour
 
 	private void Awake()
 	{
-		_instance = this;
 		_swivel = transform.GetChild(0);
 		_stick = _swivel.GetChild(0);
+	}
+
+
+	private void OnEnable()
+	{
+		_instance = this;
+		ValidatePosition();
 	}
 
 
@@ -71,17 +77,40 @@ public class HexMapCamera : MonoBehaviour
 
 		var position = transform.localPosition;
 		position += direction * distance;
-		transform.localPosition = ClampPosition(position);
+		transform.localPosition = _grid.wrapping ? WrapPosition(position) : ClampPosition(position);
 	}
 
 
 	private Vector3 ClampPosition(Vector3 position)
 	{
-		var xMax = (_grid.cellCount.x - 0.5f) * (2.0f * HexMetrics.INNER_RADIUS);
+		var xMax = (_grid.cellCount.x - 0.5f) * HexMetrics.INNER_DIAMETER;
 		position.x = Mathf.Clamp(position.x, 0.0f, xMax);
 
 		var zMax = (_grid.cellCount.y -1.0f) * (1.5f * HexMetrics.OUTER_RADIUS);
 		position.z = Mathf.Clamp(position.z, 0.0f, zMax);
+
+		return position;
+	}
+
+
+	private Vector3 WrapPosition(Vector3 position)
+	{
+		var width = _grid.cellCount.x * HexMetrics.INNER_DIAMETER;
+
+		while (position.x < 0f)
+		{
+			position.x += width;
+		}
+
+		while (position.x > width)
+		{
+			position.x -= width;
+		}
+
+		var zMax = (_grid.cellCount.y - 1.0f) * (1.5f * HexMetrics.OUTER_RADIUS);
+		position.z = Mathf.Clamp(position.z, 0.0f, zMax);
+
+		_grid.CenterMap(position.x);
 
 		return position;
 	}

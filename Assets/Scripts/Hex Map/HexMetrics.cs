@@ -10,6 +10,7 @@ public static class HexMetrics
 
 	public const float OUTER_RADIUS = 10f;
 	public const float INNER_RADIUS = OUTER_RADIUS * OUTER_TO_INNER;
+	public const float INNER_DIAMETER = INNER_RADIUS * 2.0f;
 	
 	public const float SOLID_FACTOR = 0.8f;
 	public const float BLEND_FACTOR = 1.0f - SOLID_FACTOR;
@@ -23,8 +24,8 @@ public static class HexMetrics
 	public const float HORIZONTAL_TERRACE_STEP_SIZE = 1.0f / TERRACE_STEP;
 	public const float VERTICAL_TERRACE_STEP_SIZE = 1.0f / (TERRACES_PER_SLOPE + 1);
 
-	public const float CELL_PERTURB_STRENGTH = 0.0f;//4
-	public const float ELEVATION_PERTURB_STRENGTH = 0.0f;//1.5
+	public const float CELL_PERTURB_STRENGTH = 6.0f;//4
+	public const float ELEVATION_PERTURB_STRENGTH = 1.5f;//1.5
 	public const float NOISE_SCALE = 0.003f;
 
 	public const int CHUNK_SIZE_X = 5;
@@ -56,7 +57,7 @@ public static class HexMetrics
 		new Vector3(0f, 0f, OUTER_RADIUS)
 	};
 
-
+	public static int wrapSize;
 	public static Texture2D noiseSource;
 	public static HexHash[] hashGrid;
 	public static float[][] featureThresholds = {
@@ -64,6 +65,10 @@ public static class HexMetrics
 		new [] {0.0f, 0.4f, 0.6f},
 		new [] {0.4f, 0.6f, 0.8f}
 	};
+
+
+	public static bool wrapping =>
+		wrapSize > 0;
 
 
 	public static float[] GetFeatureThresholds(int level) => 
@@ -104,6 +109,7 @@ public static class HexMetrics
 
 	public static Vector3 GetSolidEdgeMiddle(HexDirection direction) =>
 		(corners[(int) direction] + corners[(int) direction + 1]) * (0.5f * SOLID_FACTOR);
+
 
 
 	public static void InitializeHashGrid(int seed)
@@ -176,7 +182,18 @@ public static class HexMetrics
 
 	public static Vector4 SampleNoise(Vector3 position)
 	{
-		return noiseSource.GetPixelBilinear(position.x * NOISE_SCALE, position.z * NOISE_SCALE);
+		var sample =  noiseSource.GetPixelBilinear(position.x * NOISE_SCALE, position.z * NOISE_SCALE);
+
+		if (wrapping && position.x < INNER_DIAMETER * 1.5f)
+		{
+			var sample2 = noiseSource.GetPixelBilinear(
+				(position.x + wrapSize * INNER_DIAMETER) * NOISE_SCALE,
+				position.z * NOISE_SCALE);
+
+			sample = Vector4.Lerp(sample2, sample, position.x * (1f / INNER_DIAMETER) - 0.5f);
+		}
+
+		return sample;
 	}
 
 

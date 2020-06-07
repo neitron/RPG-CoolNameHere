@@ -12,6 +12,7 @@ public class NewMapMenu : MonoBehaviour
 	
 	private Canvas _canvas;
 	private bool _generateMaps = true;
+	private bool _wrapMaps = true;
 
 
 
@@ -39,11 +40,11 @@ public class NewMapMenu : MonoBehaviour
 	{
 		if (_generateMaps)
 		{
-			_mapGenerator.GenerateMap(x, z);
+			_mapGenerator.GenerateMap(x, z, _wrapMaps);
 		}
 		else
 		{
-			_hexGrid.CreateMap(x, z);
+			_hexGrid.CreateMap(x, z, _wrapMaps);
 		}
 
 		HexMapCamera.ValidatePosition();
@@ -54,6 +55,12 @@ public class NewMapMenu : MonoBehaviour
 	public void ToggleMapGeneration(bool toggle)
 	{
 		_generateMaps = toggle;
+	}
+
+
+	public void ToggleMapWrapping(bool toggle)
+	{
+		_wrapMaps = toggle;
 	}
 
 

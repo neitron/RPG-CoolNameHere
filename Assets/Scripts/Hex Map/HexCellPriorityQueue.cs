@@ -1,11 +1,9 @@
 ﻿using System.Collections.Generic;
 
 
-
-
 public class HexCellPriorityQueue
 {
-
+	
 
 	private readonly List<HexCell> _list = new List<HexCell>();
 	private int _minimum = int.MaxValue;
@@ -70,9 +68,9 @@ public class HexCellPriorityQueue
 			}
 
 			current.nextWithSamePriority = cell.nextWithSamePriority;
-			Enqueue(cell);
-			count--;
 		}
+		Enqueue(cell);
+		count--;
 	}
 
 

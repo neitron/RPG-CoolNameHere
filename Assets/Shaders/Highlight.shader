@@ -21,7 +21,7 @@
 		Cull Off
 		ZWrite Off
 		ZTest Always
-		Blend One OneMinusSrcAlpha
+		Blend One OneMinusSrcAlpha//OneMinusSrcAlpha
 
 		Pass {
 			CGPROGRAM

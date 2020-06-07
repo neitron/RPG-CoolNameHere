@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using UnityEngine;
 
 
@@ -18,8 +19,23 @@ public struct HexCoordinates
 
 
 
-	public HexCoordinates(int x, int z) =>
-		(_x, _z) = (x, z);
+	public HexCoordinates(int x, int z)
+	{
+		if (HexMetrics.wrapping)
+		{
+			var oX = x + z / 2;
+			if (oX < 0)
+			{
+				x += HexMetrics.wrapSize;
+			}
+			else if (oX >= HexMetrics.wrapSize)
+			{
+				x -= HexMetrics.wrapSize;
+			}
+		}
+		this._x = x;
+		this._z = z;
+	}
 
 
 	public static HexCoordinates FromOffsetCoordinates(int x, int z) =>
@@ -34,13 +50,9 @@ public struct HexCoordinates
 		$"{x}\n{y}\n{z}";
 
 
-	public static implicit operator Vector3Int(HexCoordinates c) =>
-		new Vector3Int(c.x, c.y, c.z);
-
-
 	public static HexCoordinates FromPosition(Vector3 position)
 	{
-		var x = position.x / (HexMetrics.INNER_RADIUS * 2.0f);
+		var x = position.x / HexMetrics.INNER_DIAMETER;
 		var y = -x;
 
 		var offset = position.z / (HexMetrics.OUTER_RADIUS * 3.0f);
@@ -71,14 +83,54 @@ public struct HexCoordinates
 	}
 
 
-
 	public int DistanceTo(HexCoordinates other)
 	{
-		return 
-			((x < other.x ? other.x - x : x - other.x) + 
-			(y < other.y ? other.y - y : y - other.y) + 
-			(z < other.z ? other.z - z : z - other.z)) / 2;
+		var xy =
+			(x < other.x ? other.x - x : x - other.x) +
+			(y < other.y ? other.y - y : y - other.y);
+
+		if (HexMetrics.wrapping)
+		{
+			other._x += HexMetrics.wrapSize;
+			var xyWrapped =
+				(x < other.x ? other.x - x : x - other.x) +
+				(y < other.y ? other.y - y : y - other.y);
+			if (xyWrapped < xy)
+			{
+				xy = xyWrapped;
+			}
+			else
+			{
+				other._x -= 2 * HexMetrics.wrapSize;
+				xyWrapped =
+					(x < other.x ? other.x - x : x - other.x) +
+					(y < other.y ? other.y - y : y - other.y);
+				if (xyWrapped < xy)
+				{
+					xy = xyWrapped;
+				}
+			}
+		}
+
+		return (xy + (z < other.z ? other.z - z : z - other.z)) / 2;
 	}
 
 
+	public void Save(BinaryWriter writer)
+	{
+		writer.Write(x);
+		writer.Write(z);
+	}
+
+	public static HexCoordinates Load(BinaryReader reader)
+	{
+		HexCoordinates c;
+		c._x = reader.ReadInt32();
+		c._z = reader.ReadInt32();
+		return c;
+	}
+
+
+	public static implicit operator Vector3Int(HexCoordinates c) =>
+		new Vector3Int(c.x, c.y, c.z);
 }
