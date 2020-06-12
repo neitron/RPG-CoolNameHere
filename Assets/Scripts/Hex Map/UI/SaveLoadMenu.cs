@@ -9,7 +9,13 @@ public class SaveLoadMenu : MonoBehaviour
 {
 
 
-	private const int MAP_FILE_VERSION = 5;
+
+
+
+
+
+
+	private const int MAP_FILE_VERSION = 6;
 
 	[SerializeField] private TextMeshProUGUI _actionButtonLabel;
 	[SerializeField] private TextMeshProUGUI _menuLabel;

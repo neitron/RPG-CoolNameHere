@@ -59,7 +59,7 @@ MonoBehaviour:
       Data: 
     - Name: coordinates
       Entry: 7
-      Data: HexCoordinates, Assembly-CSharp
+      Data: HexCoordinates, Scripts
     - Name: _x
       Entry: 3
       Data: 0
@@ -71,7 +71,7 @@ MonoBehaviour:
       Data: 
     - Name: neighbors
       Entry: 7
-      Data: 0|HexCell[], Assembly-CSharp
+      Data: 0|HexCell[], Scripts
     - Name: 
       Entry: 12
       Data: 6
@@ -129,15 +129,6 @@ MonoBehaviour:
     - Name: 
       Entry: 8
       Data: 
-  _terrainTypeIndex: 0
-  _elevation: -2147483648
-  _waterLevel: -2147483648
-  _urbanLevel: 0
-  _farmLevel: 0
-  _plantLevel: 0
-  _walled: 0
-  _specialIndex: 0
-  _distance: 0
   _label: {fileID: 161090411946873668}
 --- !u!1 &5133407890204186474
 GameObject:

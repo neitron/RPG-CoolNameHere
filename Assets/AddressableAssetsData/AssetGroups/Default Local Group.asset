@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bbb281ee3bf0b054c82ac2347e9e782c, type: 3}
+  m_Name: Default Local Group
+  m_EditorClassIdentifier: 
+  m_GroupName: Default Local Group
+  m_Data:
+    m_SerializedData: []
+  m_GUID: e6e8fa482a0e8244fa50ad4854ac377e
+  m_SerializeEntries:
+  - m_GUID: 258e8cb84188b474aa552112231efe12
+    m_Address: Scout
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Units
+  - m_GUID: a6ed7079a7e619d4793ff2367728f013
+    m_Address: Settler
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Units
+  - m_GUID: bdae596f1bf2005488747479f18ca21a
+    m_Address: PlaceholderUnit
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Units
+  - m_GUID: f41ab33bd4d2d064bba20bf413c1a1c4
+    m_Address: Warrior
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Units
+  - m_GUID: f8773209d36ae7d40aaa9d3936b25d5b
+    m_Address: Builder
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Units
+  m_ReadOnly: 0
+  m_Settings: {fileID: 11400000, guid: 8dab7259731deeb4196b8612f143bc60, type: 2}
+  m_SchemaSet:
+    m_Schemas:
+    - {fileID: 11400000, guid: 271d96348c63ff54c94b0c5e0ebb1789, type: 2}
+    - {fileID: 11400000, guid: e1bfd347a884ec640b4c83cce82237e0, type: 2}

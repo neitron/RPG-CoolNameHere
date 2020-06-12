@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2801503348801138390}
   - component: {fileID: 3507906267384055520}
   m_Layer: 0
-  m_Name: Unit
+  m_Name: Settler
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -44,6 +44,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2cf01e7a94e746eaaacaab80297fef97, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _data: {fileID: 0}
 --- !u!1 &5126487895765475298
 GameObject:
   m_ObjectHideFlags: 0
@@ -103,7 +104,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a29fc01b2005f754cbdbea0ba5afaec0, type: 2}
+  - {fileID: 2100000, guid: c38292d8d86e45a42ba801491e1d8513, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

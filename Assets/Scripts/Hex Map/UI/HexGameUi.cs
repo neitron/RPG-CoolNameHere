@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
-
 
 
 public class HexGameUi : MonoBehaviour
@@ -10,6 +10,8 @@ public class HexGameUi : MonoBehaviour
 
 	[SerializeField] private HexGrid _grid;
 	[SerializeField] private Canvas _canvas;
+	[SerializeField] private TextMeshProUGUI _cellView;
+
 
 	private HexCell _currentCell;
 	private HexUnit _selectedUnit;
@@ -37,6 +39,8 @@ public class HexGameUi : MonoBehaviour
 
 	void Update()
 	{
+		ShowCurrentCellData();
+		
 		if (!EventSystem.current.IsPointerOverGameObject())
 		{
 			if (Input.GetMouseButtonDown(0))
@@ -54,6 +58,32 @@ public class HexGameUi : MonoBehaviour
 					DoPathfinding();
 				}
 			}
+		}
+	}
+
+
+	private void ShowCurrentCellData()
+	{
+		if (UpdateCurrentCell() && _currentCell != null && _currentCell.isExplored)
+		{
+			var terrainType = (TerrainType)_currentCell.terrainTypeIndex;
+			var forest = _currentCell.plantLevel > 0 ? "Forest, " : "";
+			var urban = _currentCell.urbanLevel > 0 ? "Urban, " : "";
+			var farms = _currentCell.farmLevel > 0 ? "Farms, " : "";
+			var river = _currentCell.isHasRiver ? "River, " : "";
+			var road = _currentCell.isHasRoad ? "Road, " : "";
+			var walls = _currentCell.walled ? "Walls, " : "";
+			var unit = _currentCell.unit != null ? "\n\nUnit: " + _currentCell.unit.name : "";
+			
+			_cellView.text = _currentCell.isUnderwater ? "Water" :
+				terrainType +
+				forest + 
+				urban + 
+				farms +
+				river + 
+				road + 
+				walls +
+				unit;
 		}
 	}
 

@@ -16,7 +16,6 @@ public class HexGrid : SerializedMonoBehaviour
 
 
 	[SerializeField] private HexCell _cellPrefab;
-	[SerializeField] private HexUnit _unitPrefab;
 	[SerializeField] private HexGridChunk _chunkPrefab;
 
 	[SerializeField] private Texture2D _noiseSource;
@@ -61,8 +60,6 @@ public class HexGrid : SerializedMonoBehaviour
 		HexMetrics.noiseSource = _noiseSource;
 		HexMetrics.InitializeHashGrid(_seed);
 
-		HexUnit.unitPrefab = _unitPrefab;
-
 		_cellShaderData = gameObject.AddComponent<HexCellShaderData>();
 		_cellShaderData.hexGrid = this;
 
@@ -77,7 +74,6 @@ public class HexGrid : SerializedMonoBehaviour
 			HexMetrics.wrapSize = wrapping ? cellCount.x : 0;
 			HexMetrics.noiseSource = _noiseSource;
 			HexMetrics.InitializeHashGrid(_seed);
-			HexUnit.unitPrefab = _unitPrefab;
 			ResetVisibility();
 		}
 	}
@@ -358,7 +354,7 @@ public class HexGrid : SerializedMonoBehaviour
 			int unitCount = reader.ReadInt32();
 			for (int i = 0; i < unitCount; i++)
 			{
-				HexUnit.Load(reader, this);
+				HexUnit.Load(reader, this, header);
 			}
 		}
 

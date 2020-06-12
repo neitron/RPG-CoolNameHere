@@ -1,7 +1,9 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine.AddressableAssets;
+using UnityEngine;
 using UnityEngine.EventSystems;
-
-
+using TMPro;
+using System.Linq;
 
 public partial class HexMapEditor
 {
@@ -28,6 +30,7 @@ public partial class HexMapEditor : MonoBehaviour
 	[SerializeField] private HexGrid _hexGrid;
 	[SerializeField] private Material _terrainMaterial;
 	[SerializeField] private Canvas _editorTabCanvas;
+	[SerializeField] private TMP_Dropdown _unitsDropdown;
 
 
 	private HexCell cellUnderCursor => _hexGrid[Camera.main != null ? Camera.main.ScreenPointToRay(Input.mousePosition) : default];
@@ -55,14 +58,34 @@ public partial class HexMapEditor : MonoBehaviour
 	private bool _applyFarmLevel = true;
 	private bool _applyElevation = true;
 	private bool _isDrag;
-	
+
+	private Dictionary<string, HexUnitData> _unitsData = new Dictionary<string, HexUnitData>(); 
+
 
 
 	private void Awake()
 	{
 		_terrainMaterial.DisableKeyword("GRID_ON");
 		SetEditMode(false);
+
+		LoadUnitsData();
 	}
+
+
+	private void LoadUnitsData()
+	{
+		Addressables.LoadAssetsAsync<HexUnitData>("Units", null).Completed += operation =>
+		{
+			foreach (var unitData in operation.Result)
+			{
+				_unitsData.Add(unitData.name, unitData);
+			}
+
+			_unitsDropdown.ClearOptions();
+			_unitsDropdown.AddOptions(_unitsData.Keys.ToList());
+		};
+	}
+
 
 
 	private void Update()
@@ -82,7 +105,16 @@ public partial class HexMapEditor : MonoBehaviour
 				}
 				else
 				{
-					CreateUnit();
+					string unitKey;
+					try
+					{
+						unitKey = _unitsDropdown.options[_unitsDropdown.value].text;
+					}
+					catch
+					{
+						unitKey = "PlaceholderUnit";
+					}
+					CreateUnit(unitKey);
 				}
 			}
 		} 
@@ -349,14 +381,14 @@ public partial class HexMapEditor : MonoBehaviour
 	}
 
 
-	private void CreateUnit()
+	private void CreateUnit(string unitName)
 	{
 		var cell = cellUnderCursor;
 
-		if (cell && !cell.unit)
-		{
-			_hexGrid.AddUnit(Instantiate(HexUnit.unitPrefab), cell, Random.Range(0f, 360f));
-		}
+		if (!cell || cell.unit) 
+			return;
+		
+		HexUnit.Spawn(unitName, cell, Random.Range(0f, 360f), _hexGrid);
 	}
 
 

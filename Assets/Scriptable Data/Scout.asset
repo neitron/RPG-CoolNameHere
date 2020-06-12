@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e24096244c6643c6958c9d2bc90f1076, type: 3}
+  m_Name: Scout
+  m_EditorClassIdentifier: 
+  name: Scout
+  prefab: {fileID: 3507906267384055520, guid: 544a10997980ece498f72fe450de183c, type: 3}
+  visionRange: 3
+  speed: 18
+  damage: 15
+  armor: 0
+  maxHp: 100
+  travelSpeed: 4
+  rotationSpeed: 180
