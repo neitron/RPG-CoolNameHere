@@ -24,7 +24,7 @@ public static class HexMetrics
 	public const float HORIZONTAL_TERRACE_STEP_SIZE = 1.0f / TERRACE_STEP;
 	public const float VERTICAL_TERRACE_STEP_SIZE = 1.0f / (TERRACES_PER_SLOPE + 1);
 
-	public const float CELL_PERTURB_STRENGTH = 6.0f;//4
+	public const float CELL_PERTURB_STRENGTH = 4.0f;//4
 	public const float ELEVATION_PERTURB_STRENGTH = 1.5f;//1.5
 	public const float NOISE_SCALE = 0.003f;
 
