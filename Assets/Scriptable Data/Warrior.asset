@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Warrior
   m_EditorClassIdentifier: 
   name: Warrior
-  prefab: {fileID: 3507906267384055520, guid: 911eab0d349690349848aa513ba51e3b, type: 3}
+  prefab: {fileID: 4492470185684171622, guid: 2b65b4671a1f72b438eb011940dca580, type: 3}
   visionRange: 2
   speed: 12
   damage: 30

@@ -1,12 +1,13 @@
 ﻿sampler2D _HexCellData;
 float4 _HexCellData_TexelSize;
 
-
+#define terraintIndex w
 
 float4 FilterCellData (float4 data)
 {
 	#if defined(HEX_MAP_EDIT_MODE)
-		data.xy = 1;
+		data.x = 1;
+		data.y = 15 << 4;
 	#endif
 	return data;
 }
@@ -20,7 +21,7 @@ float4 GetCellData (appdata_full v, int index)
 	uv.x -= row;
 	uv.y = (row + 0.5) * _HexCellData_TexelSize.y;
 	float4 data = tex2Dlod(_HexCellData, float4(uv, 0, 0));
-	data.w *= 255;
+	data.terraintIndex *= 255;
 	return FilterCellData(data);
 }
 

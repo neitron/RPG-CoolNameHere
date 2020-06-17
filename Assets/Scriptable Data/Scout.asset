@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Scout
   m_EditorClassIdentifier: 
   name: Scout
-  prefab: {fileID: 3507906267384055520, guid: 544a10997980ece498f72fe450de183c, type: 3}
+  prefab: {fileID: 6395849883021044462, guid: 300398de80cf4af429af8a55d063409b, type: 3}
   visionRange: 3
   speed: 18
   damage: 15

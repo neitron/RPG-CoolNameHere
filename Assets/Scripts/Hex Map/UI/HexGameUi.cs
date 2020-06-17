@@ -64,18 +64,22 @@ public class HexGameUi : MonoBehaviour
 
 	private void ShowCurrentCellData()
 	{
-		if (UpdateCurrentCell() && _currentCell != null && _currentCell.isExplored)
+		if (Camera.main == null)
+			return;
+
+		var cell = _grid[Camera.main.ScreenPointToRay(Input.mousePosition)];
+		if (cell != null && cell.isExplored)
 		{
-			var terrainType = (TerrainType)_currentCell.terrainTypeIndex;
-			var forest = _currentCell.plantLevel > 0 ? "Forest, " : "";
-			var urban = _currentCell.urbanLevel > 0 ? "Urban, " : "";
-			var farms = _currentCell.farmLevel > 0 ? "Farms, " : "";
-			var river = _currentCell.isHasRiver ? "River, " : "";
-			var road = _currentCell.isHasRoad ? "Road, " : "";
-			var walls = _currentCell.walled ? "Walls, " : "";
-			var unit = _currentCell.unit != null ? "\n\nUnit: " + _currentCell.unit.name : "";
+			var terrainType = (TerrainType)cell.terrainTypeIndex;
+			var forest = cell.plantLevel > 0 ? "Forest, " : "";
+			var urban = cell.urbanLevel > 0 ? "Urban, " : "";
+			var farms = cell.farmLevel > 0 ? "Farms, " : "";
+			var river = cell.isHasRiver ? "River, " : "";
+			var road = cell.isHasRoad ? "Road, " : "";
+			var walls = cell.walled ? "Walls, " : "";
+			var unit = cell.unit != null ? "\n\nUnit: " + cell.unit.name + $" {cell.unit.owner}" : "";
 			
-			_cellView.text = _currentCell.isUnderwater ? "Water" :
+			_cellView.text = cell.isUnderwater ? "Water" :
 				terrainType +
 				forest + 
 				urban + 
@@ -137,4 +141,15 @@ public class HexGameUi : MonoBehaviour
 			_grid.ClearPath();
 		}
 	}
+
+
+	public void OccupyCell()
+	{
+		if (_selectedUnit)
+		{
+			var cell = _selectedUnit.location;
+			cell.shaderData.RefreshOwner(cell, _selectedUnit.owner);
+		}
+	}
+
 }

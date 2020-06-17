@@ -31,6 +31,7 @@ public partial class HexMapEditor : MonoBehaviour
 	[SerializeField] private Material _terrainMaterial;
 	[SerializeField] private Canvas _editorTabCanvas;
 	[SerializeField] private TMP_Dropdown _unitsDropdown;
+	[SerializeField] private TMP_Dropdown _ownerDropdown;
 
 
 	private HexCell cellUnderCursor => _hexGrid[Camera.main != null ? Camera.main.ScreenPointToRay(Input.mousePosition) : default];
@@ -69,6 +70,8 @@ public partial class HexMapEditor : MonoBehaviour
 		SetEditMode(false);
 
 		LoadUnitsData();
+		_ownerDropdown.ClearOptions();
+		_ownerDropdown.AddOptions(new List<string> {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"});
 	}
 
 
@@ -105,16 +108,7 @@ public partial class HexMapEditor : MonoBehaviour
 				}
 				else
 				{
-					string unitKey;
-					try
-					{
-						unitKey = _unitsDropdown.options[_unitsDropdown.value].text;
-					}
-					catch
-					{
-						unitKey = "PlaceholderUnit";
-					}
-					CreateUnit(unitKey);
+					CreateUnit();
 				}
 			}
 		} 
@@ -381,14 +375,26 @@ public partial class HexMapEditor : MonoBehaviour
 	}
 
 
-	private void CreateUnit(string unitName)
+	private void CreateUnit()
 	{
 		var cell = cellUnderCursor;
 
 		if (!cell || cell.unit) 
 			return;
-		
-		HexUnit.Spawn(unitName, cell, Random.Range(0f, 360f), _hexGrid);
+
+		string unitKey;
+		try
+		{
+			unitKey = _unitsDropdown.options[_unitsDropdown.value].text;
+		}
+		catch
+		{
+			unitKey = "PlaceholderUnit";
+		}
+
+		var owner = _ownerDropdown.value;
+
+		HexUnit.Spawn(unitKey, cell, owner, Random.Range(0f, 360f), _hexGrid);
 	}
 
 

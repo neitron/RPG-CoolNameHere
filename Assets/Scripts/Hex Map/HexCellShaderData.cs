@@ -112,12 +112,22 @@ public class HexCellShaderData : MonoBehaviour
 		var index = cell.index;
 		var data = _cellTextureData[index];
 		var stillUpdating = false;
-		if (cell.isExplored && data.g < 255)
+		//if (cell.isExplored && data.g < 255)
+		//{
+		//	stillUpdating = true;
+		//	var t = data.g + delta;
+		//	data.g = t >= 255 ? (byte) 255 : (byte) t;
+		//}
+
+		var exploration = (byte)(data.g >> 4);
+		var owner = (byte)(data.g & 15);
+		if (cell.isExplored && exploration < 15 )
 		{
 			stillUpdating = true;
-			var t = data.g + delta;
-			data.g = t >= 255 ? (byte) 255 : (byte) t;
+			var t = exploration + delta;
+			exploration = t >= 15 ? (byte) 15 : (byte) t;
 		}
+		data.g = (byte)((exploration << 4) + owner);
 
 		if (cell.isVisible)
 		{
@@ -151,6 +161,7 @@ public class HexCellShaderData : MonoBehaviour
 		enabled = true;
 	}
 
+
 	public void RefreshVisibility(HexCell cell)
 	{
 		var index = cell.index;
@@ -165,6 +176,15 @@ public class HexCellShaderData : MonoBehaviour
 			_cellTextureData[index].b = 255;
 			_transitioningCells.Add(cell);
 		}
+		enabled = true;
+	}
+
+
+	public void RefreshOwner(HexCell cell, int owner)
+	{
+		var exploration = (byte) (_cellTextureData[cell.index].g >> 4);
+		_cellTextureData[cell.index].g = (byte)((exploration << 4) + owner);
+
 		enabled = true;
 	}
 

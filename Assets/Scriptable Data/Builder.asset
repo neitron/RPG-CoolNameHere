@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Builder
   m_EditorClassIdentifier: 
   name: Builder
-  prefab: {fileID: 3507906267384055520, guid: 9f8154336d8336d44bd8c131688d5ad4, type: 3}
+  prefab: {fileID: 5492946963194067349, guid: d91ecc524b43ff444bc3ce32e62ddf7f, type: 3}
   visionRange: 2
   speed: 12
   damage: 0

@@ -1,11 +1,12 @@
-﻿using System.IO;
-using System.Linq;
-using UnityEngine;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using Sirenix.OdinInspector;
 using Sirenix.Serialization;
+using System.IO;
+using System.Linq;
 using TMPro;
-using System.Dynamic;
+using UnityEngine;
+
+
 
 public class HexCell : SerializedMonoBehaviour
 {
@@ -41,6 +42,7 @@ public class HexCell : SerializedMonoBehaviour
 	public int columnIndex { get; set; }
 	public int distance { get; set; }
 	public int index { get; set; }
+	public int owner { get; set; }
 
 
 
@@ -428,22 +430,22 @@ public class HexCell : SerializedMonoBehaviour
 
 	public void AddRoad(HexDirection direction)
 	{
-		var index = (int) direction;
-		if (!roads[index] &&
+		var i = (int) direction;
+		if (!roads[i] &&
 			!isSpecial && !this[direction].isSpecial && 
 			!IsRiverGoesThroughEdge(direction) && GetElevationDifference(direction) <= 1)
 		{
-			SetRoad(index, true);
+			SetRoad(i, true);
 		}
 	}
 
 
-	public void SetRoad(int index, bool state)
+	public void SetRoad(int i, bool state)
 	{ 
-		roads[index] = state;
+		roads[i] = state;
 
-		neighbors[index].roads[(int)((HexDirection)index).Opposite()] = state;
-		neighbors[index].RefreshSelfOnly();
+		neighbors[i].roads[(int)((HexDirection)i).Opposite()] = state;
+		neighbors[i].RefreshSelfOnly();
 		RefreshSelfOnly();
 	}
 

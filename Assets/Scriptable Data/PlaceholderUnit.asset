@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: PlaceholderUnit
   m_EditorClassIdentifier: 
   name: PlaceholderUnit
-  prefab: {fileID: 3507906267384055520, guid: 802d8f3c8a369e843b43b8a2165621b2, type: 3}
+  prefab: {fileID: 2162650452837616837, guid: dd4e7339b8ddfe145b42dd4e91a9e950, type: 3}
   visionRange: 2
   speed: 12
   damage: 0

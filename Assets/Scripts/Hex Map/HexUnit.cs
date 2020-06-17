@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 
 
+
 public class HexUnit : MonoBehaviour
 {
 
@@ -43,12 +44,14 @@ public class HexUnit : MonoBehaviour
 	public int speed => _data.speed;
 	public int visionRange => _data.visionRange;
 	public new string name => _data.name;
+	public int owner => _owner;
 
 	private HexCell _location;
 	private HexCell _currentTravelLocation;
 	private HexUnitData _data;
 	private float _orientation;
 	private List<HexCell> _pathToTravel;
+	private int _owner = 0;
 
 
 
@@ -102,17 +105,20 @@ public class HexUnit : MonoBehaviour
 		{
 			name = reader.ReadString();
 		}
-		Spawn(name, grid[coordinates], orientation, grid);
+		Spawn(name, grid[coordinates], 0, orientation, grid);
 	}
 
 
-	public static void Spawn(string name, HexCell cell, float orientation, HexGrid grid)
+	public static void Spawn(string name, HexCell cell, int owner, float orientation, HexGrid grid)
 	{
 		Addressables.LoadAssetAsync<HexUnitData>(name).Completed += operation =>
 		{
 			var unit = Instantiate(operation.Result.prefab);
 			unit._data = operation.Result;
+			unit._owner = owner;
 			grid.AddUnit(unit, cell, orientation);
+
+			unit.transform.GetChild(1).GetComponent<Renderer>().material.color = Color.HSVToRGB((owner + 1) / 16.0f, 1, 1);
 		};
 	}
 

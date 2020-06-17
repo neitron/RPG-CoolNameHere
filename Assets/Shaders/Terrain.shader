@@ -35,10 +35,21 @@
             float3 worldPos;
             float3 terrain;
             float4 visibility;
+            float4 owner;
+            float ownerHue;
             #if defined(SHOW_MAP_DATA)
                 float mapData;
             #endif
         };
+
+
+
+        float3 HSVToRGB( float3 c )
+		{
+			float4 K = float4( 1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0 );
+			float3 p = abs( frac( c.xxx + K.xyz ) * 6.0 - K.www );
+			return c.z * lerp( K.xxx, saturate( p - K.xxx ), c.y );
+		}
 
 
         void vert (inout appdata_full v, out Input data) 
@@ -49,6 +60,10 @@
 			float4 cell1 = GetCellData(v, 1);
 			float4 cell2 = GetCellData(v, 2);
 
+            cell0.y *= 255;
+            cell1.y *= 255;
+            cell2.y *= 255;
+
 			data.terrain.x = cell0.w;
 			data.terrain.y = cell1.w;
 			data.terrain.z = cell2.w;
@@ -57,9 +72,31 @@
 			data.visibility.y = cell1.x;
 			data.visibility.z = cell2.x;
             data.visibility.xyz = lerp(0.25, 1, data.visibility);
-            data.visibility.w =
-				cell0.y * v.color.x + cell1.y * v.color.y + cell2.y * v.color.z;
 
+            float v0 = ((int)cell0.y >> 4 & 15) / 15.0f;
+            float v1 = ((int)cell1.y >> 4 & 15) / 15.0f;
+            float v2 = ((int)cell2.y >> 4 & 15) / 15.0f;
+
+            data.visibility.w = v0 * v.color.x + v1 * v.color.y + v2 * v.color.z;
+            
+            v0 = (int)cell0.y & 15;
+            v1 = (int)cell1.y & 15;
+            v2 = (int)cell2.y & 15;
+
+            float3 color0 = HSVToRGB( float3( v0 / 15.0f, 1.0f, 1.0f) ); 
+            float3 color1 = HSVToRGB( float3( v1 / 15.0f, 1.0f, 1.0f) ); 
+            float3 color2 = HSVToRGB( float3( v2 / 15.0f, 1.0f, 1.0f) ); 
+
+            data.ownerHue = floor(v0 * v.color.x + v1 * v.color.y + v2 * v.color.z);
+            data.owner.rgb = 
+                (color0 * v.color.x + color1 * v.color.y + color2 * v.color.z);
+			
+            v0 = step(1, v0);
+            v1 = step(1, v1);
+            v2 = step(1, v2);
+            
+            data.owner.w = (v0 * v.color.x + v1 * v.color.y + v2 * v.color.z);
+            data.owner.rgb *= data.owner.w;
             #if defined(SHOW_MAP_DATA)
                 data.mapData = cell0.z * v.color.x + cell1.z * v.color.y + cell2.z * v.color.z;
             #endif
@@ -104,7 +141,15 @@
             #endif
 
             float explored = IN.visibility.w;
-			o.Albedo = c.rgb * grid * _Color * explored;
+            float ownerBorder = IN.owner.w * 2;
+            ownerBorder = smoothstep(0.8, 0.85, ownerBorder);
+
+            float cellGrid = abs(IN.color.x - 0.5f) * abs(IN.color.y - 0.5f) * abs(IN.color.z - 0.5f);
+            cellGrid = smoothstep(0.01f, 0.03f, cellGrid);
+            
+            float i;
+            float j = modf(IN.ownerHue, i);
+			o.Albedo = lerp(c.rgb * grid * _Color * explored, IN.owner.rgb, saturate((1 - abs(j - 0.5) * 2) * (1 - cellGrid) * ownerBorder * 10000));
             #if defined(SHOW_MAP_DATA)
                 o.Albedo = IN.mapData * grid;
             #endif
