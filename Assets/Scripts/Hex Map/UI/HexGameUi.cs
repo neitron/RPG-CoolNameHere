@@ -145,9 +145,21 @@ public class HexGameUi : MonoBehaviour
 
 	public void OccupyCell()
 	{
-		if (_selectedUnit)
+		if (!_selectedUnit) 
+			return;
+		
+		var cell = _selectedUnit.location;
+
+		var hasNeighborWithSameOwner = false;
+		for (var d = HexDirection.Ne; d <= HexDirection.Nw; d++)
 		{
-			var cell = _selectedUnit.location;
+			var neighbor = cell[d];
+			hasNeighborWithSameOwner |= neighbor.isHasOwner && neighbor.owner == _selectedUnit.owner;
+		}
+
+		if (hasNeighborWithSameOwner)
+		{
+			cell.owner = _selectedUnit.owner;
 			cell.shaderData.RefreshOwner(cell, _selectedUnit.owner);
 		}
 	}

@@ -16,9 +16,12 @@ public class HexGridChunk : MonoBehaviour
 	[SerializeField] private HexMesh _water;
 
 
-	private static readonly Color _weights1 = new Color(1f, 0f, 0f);
-	private static readonly Color _weights2 = new Color(0f, 1f, 0f);
-	private static readonly Color _weights3 = new Color(0f, 0f, 1f);
+	private static readonly Color _weights1 = new Color(1f, 0f, 0f, 1f);
+	private static readonly Color _weights2 = new Color(0f, 1f, 0f, 1f);
+	private static readonly Color _weights3 = new Color(0f, 0f, 1f, 1f);
+	//private static readonly Color _weights14 = new Color(1f, 0f, 0f, 0f);
+	//private static readonly Color _weights24 = new Color(0f, 1f, 0f, 0f);
+	//private static readonly Color _weights34 = new Color(0f, 0f, 1f, 0f);
 
 
 

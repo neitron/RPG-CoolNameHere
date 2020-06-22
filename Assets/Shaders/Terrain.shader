@@ -12,7 +12,11 @@
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" }
+        Tags 
+        { 
+            "RenderType"="Opaque" 
+            "TerrainBorders"="True" 
+        }
         LOD 200
 
         CGPROGRAM
@@ -36,7 +40,6 @@
             float3 terrain;
             float4 visibility;
             float4 owner;
-            float ownerHue;
             #if defined(SHOW_MAP_DATA)
                 float mapData;
             #endif
@@ -50,7 +53,6 @@
 			float3 p = abs( frac( c.xxx + K.xyz ) * 6.0 - K.www );
 			return c.z * lerp( K.xxx, saturate( p - K.xxx ), c.y );
 		}
-
 
         void vert (inout appdata_full v, out Input data) 
         {
@@ -87,16 +89,20 @@
             float3 color1 = HSVToRGB( float3( v1 / 15.0f, 1.0f, 1.0f) ); 
             float3 color2 = HSVToRGB( float3( v2 / 15.0f, 1.0f, 1.0f) ); 
 
-            data.ownerHue = floor(v0 * v.color.x + v1 * v.color.y + v2 * v.color.z);
             data.owner.rgb = 
                 (color0 * v.color.x + color1 * v.color.y + color2 * v.color.z);
 			
-            v0 = step(1, v0);
-            v1 = step(1, v1);
-            v2 = step(1, v2);
+            float isCellOwnersAreSame = v0 == v1 && v1 == v2;
             
-            data.owner.w = (v0 * v.color.x + v1 * v.color.y + v2 * v.color.z);
-            data.owner.rgb *= data.owner.w;
+            v0 =step(1, v0);
+            v1 =step(1, v1);
+            v2 =step(1, v2);
+            
+            float isHasOwner = v0 * v.color.x + v1 * v.color.y + v2 * v.color.z;
+            isCellOwnersAreSame = saturate(1 - isCellOwnersAreSame) * isHasOwner;
+            
+            data.owner.w = isCellOwnersAreSame;
+
             #if defined(SHOW_MAP_DATA)
                 data.mapData = cell0.z * v.color.x + cell1.z * v.color.y + cell2.z * v.color.z;
             #endif
@@ -127,6 +133,12 @@
 
         void surf (Input IN, inout SurfaceOutputStandardSpecular o)
         {
+            float f =
+                IN.color.x > 0.3f && IN.color.x < 0.7f && IN.color.y > 0.3f && IN.color.y < 0.7f ||
+                IN.color.y > 0.3f && IN.color.y < 0.7f && IN.color.z > 0.01f && IN.color.z < 0.99f ||
+                IN.color.x > 0.3f && IN.color.x < 0.7f && IN.color.z > 0.01f && IN.color.z < 0.99f;
+            f *= IN.color.z == 0;
+
 			fixed4 c =
 				GetTerrainColor(IN, 0) +
 				GetTerrainColor(IN, 1) +
@@ -138,18 +150,18 @@
 			    gridUV.x *= 1 / (4 * 8.66025404);
 			    gridUV.y *= 1 / (2 * 15.0);
                 grid = tex2D(_GridTex, gridUV);
+                float cellGrid = saturate(abs(IN.color.x - 0.5f) * abs(IN.color.y - 0.5f) * abs(IN.color.z - 0.5) * 9);
+                cellGrid = smoothstep(0.04f, 0.1f, cellGrid);
+                grid = lerp(0.5, 1, cellGrid);
             #endif
-
-            float explored = IN.visibility.w;
-            float ownerBorder = IN.owner.w * 2;
-            ownerBorder = smoothstep(0.8, 0.85, ownerBorder);
-
-            float cellGrid = abs(IN.color.x - 0.5f) * abs(IN.color.y - 0.5f) * abs(IN.color.z - 0.5f);
-            cellGrid = smoothstep(0.01f, 0.03f, cellGrid);
             
-            float i;
-            float j = modf(IN.ownerHue, i);
-			o.Albedo = lerp(c.rgb * grid * _Color * explored, IN.owner.rgb, saturate((1 - abs(j - 0.5) * 2) * (1 - cellGrid) * ownerBorder * 10000));
+            float explored = IN.visibility.w;
+            float ownerBorder = IN.owner.w;
+            ownerBorder = smoothstep(0.7, 0.71, ownerBorder);
+
+            float factor = step(0.9, length( IN.owner.rgb));
+            
+			o.Albedo = lerp(c.rgb * grid * _Color * explored, IN.owner.rgb, ownerBorder * (1 - f));
             #if defined(SHOW_MAP_DATA)
                 o.Albedo = IN.mapData * grid;
             #endif

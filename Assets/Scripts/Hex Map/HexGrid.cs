@@ -389,6 +389,9 @@ public class HexGrid : SerializedMonoBehaviour
 		unit.grid = this;
 		unit.location = location;
 		unit.orientation = orientation;
+
+		location.owner = unit.owner;
+		location.shaderData.RefreshOwner(location, unit.owner);
 	}
 
 

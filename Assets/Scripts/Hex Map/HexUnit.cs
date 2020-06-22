@@ -5,7 +5,6 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 
 
-
 public class HexUnit : MonoBehaviour
 {
 
@@ -105,21 +104,9 @@ public class HexUnit : MonoBehaviour
 		{
 			name = reader.ReadString();
 		}
-		Spawn(name, grid[coordinates], 0, orientation, grid);
-	}
 
-
-	public static void Spawn(string name, HexCell cell, int owner, float orientation, HexGrid grid)
-	{
-		Addressables.LoadAssetAsync<HexUnitData>(name).Completed += operation =>
-		{
-			var unit = Instantiate(operation.Result.prefab);
-			unit._data = operation.Result;
-			unit._owner = owner;
-			grid.AddUnit(unit, cell, orientation);
-
-			unit.transform.GetChild(1).GetComponent<Renderer>().material.color = Color.HSVToRGB((owner + 1) / 16.0f, 1, 1);
-		};
+		var unit = HexUnitFactory.Spawn(name, 0);
+		grid.AddUnit(unit, grid[coordinates], orientation);
 	}
 
 
@@ -280,5 +267,15 @@ public class HexUnit : MonoBehaviour
 		}
 		return moveCost;
 	}
+
+
+	public void Init(HexUnitData hexUnitData, int unitOwner)
+	{
+		_data = hexUnitData;
+		_owner = unitOwner;
+
+		transform.GetChild(1).GetComponent<Renderer>().material.color = Color.HSVToRGB((owner + 1) / 16.0f, 1, 1);
+	}
+
 
 }

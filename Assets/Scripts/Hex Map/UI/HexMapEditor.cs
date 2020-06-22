@@ -71,7 +71,7 @@ public partial class HexMapEditor : MonoBehaviour
 
 		LoadUnitsData();
 		_ownerDropdown.ClearOptions();
-		_ownerDropdown.AddOptions(new List<string> {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"});
+		_ownerDropdown.AddOptions(new List<string> { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14" });
 	}
 
 
@@ -392,9 +392,10 @@ public partial class HexMapEditor : MonoBehaviour
 			unitKey = "PlaceholderUnit";
 		}
 
-		var owner = _ownerDropdown.value;
+		var owner = _ownerDropdown.value + 1;
 
-		HexUnit.Spawn(unitKey, cell, owner, Random.Range(0f, 360f), _hexGrid);
+		var unit = HexUnitFactory.Spawn(unitKey, owner);
+		_hexGrid.AddUnit(unit, cell, Random.Range(0f, 360f));
 	}
 
 

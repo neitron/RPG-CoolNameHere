@@ -175,7 +175,7 @@ public class HexMapGenerator : MonoBehaviour
 	};
 
 
-	public void GenerateMap(int x, int z, bool wrapping)
+	public void GenerateMap(int x, int z, bool wrapping, int playersCount)
 	{
 		var originalRandomState = Random.state;
 		if (!_fixedSeed.enabled)
@@ -206,6 +206,7 @@ public class HexMapGenerator : MonoBehaviour
 		CreateClimate();
 		CreateRivers();
 		SetTerrainType();
+		AddUnits(playersCount);
 
 		for (var i = 0; i < _cellCount; i++)
 		{
@@ -213,6 +214,42 @@ public class HexMapGenerator : MonoBehaviour
 		}
 
 		Random.state = originalRandomState;
+	}
+
+
+	private void AddUnits(int playersCount)
+	{
+		var units = new HexUnit[playersCount];
+		var unitsCount = 0;
+		for (var i = 0; i < _cellCount && unitsCount < playersCount; i++)
+		{
+			var cell = _grid[i];
+
+			if (cell.isUnderwater || !cell.isExplorable)
+				continue;
+
+			var isFarEnoughFromOthers = true;
+			for (var j = 0; j < unitsCount && isFarEnoughFromOthers; j++)
+			{
+				var unit = units[j];
+				if (unit == null)
+					break;
+
+				isFarEnoughFromOthers &= cell.coordinates.DistanceTo(unit.location.coordinates) >= 10;
+			}
+
+			if (!isFarEnoughFromOthers)
+			{
+				continue;
+			}
+
+			var newUnit = HexUnitFactory.Spawn("Settler", unitsCount + 1);
+			_grid.AddUnit(newUnit, cell, Random.Range(0f, 360f));
+			units[unitsCount] = newUnit;
+			unitsCount++;
+		}
+
+		
 	}
 
 

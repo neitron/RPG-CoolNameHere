@@ -45,6 +45,8 @@ public class HexCell : SerializedMonoBehaviour
 	public int owner { get; set; }
 
 
+	public bool isHasOwner => owner > 0;
+
 
 	[ShowInInspector]
 	public int terrainTypeIndex

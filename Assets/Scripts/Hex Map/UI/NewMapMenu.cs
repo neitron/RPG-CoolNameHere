@@ -13,6 +13,7 @@ public class NewMapMenu : MonoBehaviour
 	private Canvas _canvas;
 	private bool _generateMaps = true;
 	private bool _wrapMaps = true;
+	private int _playerCount = 2;
 
 
 
@@ -40,7 +41,7 @@ public class NewMapMenu : MonoBehaviour
 	{
 		if (_generateMaps)
 		{
-			_mapGenerator.GenerateMap(x, z, _wrapMaps);
+			_mapGenerator.GenerateMap(x, z, _wrapMaps, _playerCount);
 		}
 		else
 		{
@@ -61,6 +62,12 @@ public class NewMapMenu : MonoBehaviour
 	public void ToggleMapWrapping(bool toggle)
 	{
 		_wrapMaps = toggle;
+	}
+
+
+	public void PlayerCountDropdownChanged(int option)
+	{
+		_playerCount = option + 2;
 	}
 
 
