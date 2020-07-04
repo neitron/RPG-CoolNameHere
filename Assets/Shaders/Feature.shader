@@ -5,7 +5,6 @@
         _Color ("Color", Color) = (1,1,1,1)
         _MainTex ("Albedo (RGB)", 2D) = "white" {}
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
-        _Metallic ("Metallic", Range(0,1)) = 0.0
         [NoScaleOffset] _GridCoordinates ("Grid Coordinates", 2D) = "white" {}
         _Specular ("Specular", Color) = (0.2, 0.2, 0.2)
 		_BackgroundColor ("Background Color", Color) = (0,0,0)

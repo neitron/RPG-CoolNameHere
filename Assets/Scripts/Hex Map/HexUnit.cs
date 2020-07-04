@@ -24,7 +24,9 @@ public class HexUnit : MonoBehaviour
 			}
 			_location = value;
 			_location.unit = this;
-			grid.IncreaseVisibility(_location, _data.visionRange);
+
+			grid.IncreaseVisibility(_location, _data.visionRange, playerId);
+			
 			transform.localPosition = _location.position;
 			grid.MakeChildOfColumn(transform, value.columnIndex);
 		}
@@ -43,15 +45,27 @@ public class HexUnit : MonoBehaviour
 	public int speed => _data.speed;
 	public int visionRange => _data.visionRange;
 	public new string name => _data.name;
-	public int owner => _owner;
+	public int playerId { private set; get; }
+	public int remainingTravelBudget { private set; get; }
 
 	private HexCell _location;
 	private HexCell _currentTravelLocation;
 	private HexUnitData _data;
 	private float _orientation;
 	private List<HexCell> _pathToTravel;
-	private int _owner = 0;
 
+
+
+	public void Init(HexUnitData hexUnitData, int player)
+	{
+		_data = hexUnitData;
+		playerId = player;
+
+		// as shader color shifted for a 1 we shift color here as well for a 1
+		transform.GetChild(1).GetComponent<Renderer>().material.color = Color.HSVToRGB((playerId + 1) / 15.0f, 1, 1);
+
+		ResetTravelBudget();
+	}
 
 
 	private void OnEnable()
@@ -62,7 +76,7 @@ public class HexUnit : MonoBehaviour
 
 			if (_currentTravelLocation)
 			{
-				grid.IncreaseVisibility(_location, _data.visionRange);
+				grid.IncreaseVisibility(_location, _data.visionRange, playerId);
 				grid.DecreaseVisibility(_currentTravelLocation, _data.visionRange);
 				_currentTravelLocation = null;
 			}
@@ -112,18 +126,36 @@ public class HexUnit : MonoBehaviour
 
 	public bool IsValidDestination(HexCell cell)
 	{
-		return cell.isExplored && !cell.isUnderwater && !cell.unit;
+		return cell.isExploredByPlayer && !cell.isUnderwater && !cell.unit;
 	}
 
 
 	public void Travel(List<HexCell> path)
 	{
+		if (remainingTravelBudget == 0 || (path[1].distance - 1) / remainingTravelBudget != 0)
+			return;
+
 		_location.unit = null;
-		_location = path[path.Count - 1];
+		var turnAvailablePath = ExtractTurnAvailablePath(path);
+		_location = turnAvailablePath[turnAvailablePath.Count - 1];
+		remainingTravelBudget -= _location.distance;
 		_location.unit = this;
-		_pathToTravel = path;
+		_pathToTravel = turnAvailablePath;
+
 		StopAllCoroutines();
 		StartCoroutine(TravelPath());
+	}
+
+
+	private List<HexCell> ExtractTurnAvailablePath(List<HexCell> path)
+	{
+		for (var i = path.Count - 1; i >= 1; i--)
+		{
+			if ((path[i].distance - 1) / remainingTravelBudget > 0) 
+				path.RemoveAt(i);
+		}
+
+		return path;
 	}
 
 
@@ -168,7 +200,7 @@ public class HexUnit : MonoBehaviour
 			}
 
 			c = (b + _currentTravelLocation.position) * 0.5f;
-			grid.IncreaseVisibility(_pathToTravel[i], visionRange);
+			grid.IncreaseVisibility(_pathToTravel[i], visionRange, playerId);
 
 			for (; t < 1f; t += Time.deltaTime * _data.travelSpeed)
 			{
@@ -190,7 +222,7 @@ public class HexUnit : MonoBehaviour
 		a = c;
 		b = _location.position;
 		c = b;
-		grid.IncreaseVisibility(_location, _data.visionRange);
+		grid.IncreaseVisibility(_location, _data.visionRange, playerId);
 		for (; t < 1f; t += Time.deltaTime * _data.travelSpeed)
 		{
 			transform.localPosition = Bezier.GetPoint(a, b, c, t);
@@ -204,7 +236,7 @@ public class HexUnit : MonoBehaviour
 		transform.localPosition = _location.position;
 		_orientation = transform.localRotation.eulerAngles.y;
 
-		ListPool<HexCell>.Add(_pathToTravel);
+		ListPool<HexCell>.Refuse(_pathToTravel);
 		_pathToTravel = null;
 	}
 
@@ -269,12 +301,9 @@ public class HexUnit : MonoBehaviour
 	}
 
 
-	public void Init(HexUnitData hexUnitData, int unitOwner)
+	public void ResetTravelBudget()
 	{
-		_data = hexUnitData;
-		_owner = unitOwner;
-
-		transform.GetChild(1).GetComponent<Renderer>().material.color = Color.HSVToRGB((owner + 1) / 16.0f, 1, 1);
+		remainingTravelBudget = speed;
 	}
 
 

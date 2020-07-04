@@ -1,5 +1,6 @@
 ﻿using JetBrains.Annotations;
 using TMPro;
+using UniRx;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -13,8 +14,8 @@ public class HexGameUi : MonoBehaviour
 	[SerializeField] private TextMeshProUGUI _cellView;
 
 
-	private HexCell _currentCell;
-	private HexUnit _selectedUnit;
+	public Subject<Unit> cellOccupyButtonPressed = new Subject<Unit>();
+	public Subject<Unit> endTurnButtonPressed = new Subject<Unit>();
 
 
 
@@ -40,25 +41,6 @@ public class HexGameUi : MonoBehaviour
 	void Update()
 	{
 		ShowCurrentCellData();
-		
-		if (!EventSystem.current.IsPointerOverGameObject())
-		{
-			if (Input.GetMouseButtonDown(0))
-			{
-				DoSelection();
-			}
-			else if (_selectedUnit)
-			{
-				if (Input.GetMouseButtonDown(1))
-				{
-					DoMove();
-				}
-				else
-				{
-					DoPathfinding();
-				}
-			}
-		}
 	}
 
 
@@ -70,15 +52,15 @@ public class HexGameUi : MonoBehaviour
 		var cell = _grid[Camera.main.ScreenPointToRay(Input.mousePosition)];
 		if (cell != null && cell.isExplored)
 		{
-			var terrainType = (TerrainType)cell.terrainTypeIndex;
+			var terrainType = (TerrainType)cell.terrainTypeIndex + ", ";
 			var forest = cell.plantLevel > 0 ? "Forest, " : "";
 			var urban = cell.urbanLevel > 0 ? "Urban, " : "";
 			var farms = cell.farmLevel > 0 ? "Farms, " : "";
 			var river = cell.isHasRiver ? "River, " : "";
 			var road = cell.isHasRoad ? "Road, " : "";
 			var walls = cell.walled ? "Walls, " : "";
-			var unit = cell.unit != null ? "\n\nUnit: " + cell.unit.name + $" {cell.unit.owner}" : "";
-			
+			var unit = cell.unit != null ? "\nUnit: " + cell.unit.name + $" {cell.unit.playerId} " : "";
+			var cellOwner = cell.isHasOwner ? $"\nOwner : Player-{cell.owner}, " : $"No Owner, ";
 			_cellView.text = cell.isUnderwater ? "Water" :
 				terrainType +
 				forest + 
@@ -87,81 +69,23 @@ public class HexGameUi : MonoBehaviour
 				river + 
 				road + 
 				walls +
-				unit;
+				unit +
+				cellOwner;
 		}
 	}
 
 
-	private void DoPathfinding()
+	[UsedImplicitly]
+	public void OccupyCellExternal()
 	{
-		if (UpdateCurrentCell())
-		{
-			if (_currentCell && _selectedUnit.IsValidDestination(_currentCell))
-			{
-				_grid.FindPath(_selectedUnit.location, _currentCell, _selectedUnit);
-			}
-			else
-			{
-				_grid.ClearPath();
-			}
-		}
+		cellOccupyButtonPressed.OnNext(new Unit());
 	}
 
 
-	public bool UpdateCurrentCell()
+	[UsedImplicitly]
+	public void EndTurnExternal()
 	{
-		if (Camera.main == null)
-			return false;
-		
-		var cell = _grid[Camera.main.ScreenPointToRay(Input.mousePosition)];
-		if (cell == _currentCell) 
-			return false;
-		
-		_currentCell = cell;
-		return true;
-	}
-
-
-	private void DoSelection()
-	{
-		_grid.ClearPath();
-		UpdateCurrentCell();
-		if (_currentCell)
-		{
-			_selectedUnit = _currentCell.unit;
-		}
-	}
-
-
-	private void DoMove()
-	{
-		if (_grid.hasPath)
-		{
-			_selectedUnit.Travel(_grid.GetPath());
-			_grid.ClearPath();
-		}
-	}
-
-
-	public void OccupyCell()
-	{
-		if (!_selectedUnit) 
-			return;
-		
-		var cell = _selectedUnit.location;
-
-		var hasNeighborWithSameOwner = false;
-		for (var d = HexDirection.Ne; d <= HexDirection.Nw; d++)
-		{
-			var neighbor = cell[d];
-			hasNeighborWithSameOwner |= neighbor.isHasOwner && neighbor.owner == _selectedUnit.owner;
-		}
-
-		if (hasNeighborWithSameOwner)
-		{
-			cell.owner = _selectedUnit.owner;
-			cell.shaderData.RefreshOwner(cell, _selectedUnit.owner);
-		}
+		endTurnButtonPressed.OnNext(new Unit());
 	}
 
 }

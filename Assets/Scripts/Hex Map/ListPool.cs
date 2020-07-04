@@ -12,7 +12,7 @@ public static class ListPool<T>
 		_stack.Count > 0 ? _stack.Pop() : new List<T>();
 
 
-	public static void Add(List<T> list)
+	public static void Refuse(List<T> list)
 	{
 		list.Clear();
 		_stack.Push(list);

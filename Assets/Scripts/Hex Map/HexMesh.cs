@@ -234,30 +234,30 @@ public class HexMesh : MonoBehaviour
 	public void Apply()
 	{
 		_mesh.SetVertices(_vertices);
-		ListPool<Vector3>.Add(_vertices);
+		ListPool<Vector3>.Refuse(_vertices);
 
 		if (_isUseCellData)
 		{
 			_mesh.SetColors(_cellWeights);
-			ListPool<Color>.Add(_cellWeights);
+			ListPool<Color>.Refuse(_cellWeights);
 			_mesh.SetUVs(2, _cellIndices);
-			ListPool<Vector3>.Add(_cellIndices);
+			ListPool<Vector3>.Refuse(_cellIndices);
 		}
 
 		if (_isUseUv)
 		{
 			_mesh.SetUVs(0, _uvs);
-			ListPool<Vector2>.Add(_uvs);
+			ListPool<Vector2>.Refuse(_uvs);
 		}
 
 		if (_isUseUv2)
 		{
 			_mesh.SetUVs(1, _uvs2);
-			ListPool<Vector2>.Add(_uvs2);
+			ListPool<Vector2>.Refuse(_uvs2);
 		}
 
 		_mesh.SetTriangles(_triangles, 0);
-		ListPool<int>.Add(_triangles);
+		ListPool<int>.Refuse(_triangles);
 
 		_mesh.RecalculateNormals();
 

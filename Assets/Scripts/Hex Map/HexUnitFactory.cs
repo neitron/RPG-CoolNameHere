@@ -22,10 +22,10 @@ public static class HexUnitFactory
 	}
 
 
-	public static HexUnit Spawn(string key, int owner)
+	public static HexUnit Spawn(string key, int playerId)
 	{
 		var unit = Object.Instantiate(_unitOrigins[key].prefab);
-		unit.Init(_unitOrigins[key], owner);
+		unit.Init(_unitOrigins[key], playerId);
 
 		return unit;
 	}

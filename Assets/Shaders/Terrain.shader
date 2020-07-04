@@ -161,7 +161,7 @@
 
             float factor = step(0.9, length( IN.owner.rgb));
             
-			o.Albedo = lerp(c.rgb * grid * _Color * explored, IN.owner.rgb, ownerBorder * (1 - f));
+			o.Albedo = lerp(c.rgb * grid * _Color * explored, IN.owner.rgb* explored, ownerBorder * (1 - f));
             #if defined(SHOW_MAP_DATA)
                 o.Albedo = IN.mapData * grid;
             #endif

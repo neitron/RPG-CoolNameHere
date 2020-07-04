@@ -206,7 +206,6 @@ public class HexMapGenerator : MonoBehaviour
 		CreateClimate();
 		CreateRivers();
 		SetTerrainType();
-		AddUnits(playersCount);
 
 		for (var i = 0; i < _cellCount; i++)
 		{
@@ -214,42 +213,6 @@ public class HexMapGenerator : MonoBehaviour
 		}
 
 		Random.state = originalRandomState;
-	}
-
-
-	private void AddUnits(int playersCount)
-	{
-		var units = new HexUnit[playersCount];
-		var unitsCount = 0;
-		for (var i = 0; i < _cellCount && unitsCount < playersCount; i++)
-		{
-			var cell = _grid[i];
-
-			if (cell.isUnderwater || !cell.isExplorable)
-				continue;
-
-			var isFarEnoughFromOthers = true;
-			for (var j = 0; j < unitsCount && isFarEnoughFromOthers; j++)
-			{
-				var unit = units[j];
-				if (unit == null)
-					break;
-
-				isFarEnoughFromOthers &= cell.coordinates.DistanceTo(unit.location.coordinates) >= 10;
-			}
-
-			if (!isFarEnoughFromOthers)
-			{
-				continue;
-			}
-
-			var newUnit = HexUnitFactory.Spawn("Settler", unitsCount + 1);
-			_grid.AddUnit(newUnit, cell, Random.Range(0f, 360f));
-			units[unitsCount] = newUnit;
-			unitsCount++;
-		}
-
-		
 	}
 
 
@@ -317,7 +280,7 @@ public class HexMapGenerator : MonoBehaviour
 			Debug.LogWarning("Failed to use up river budget.");
 		}
 
-		ListPool<HexCell>.Add(riversOrigins);
+		ListPool<HexCell>.Refuse(riversOrigins);
 	}
 
 
@@ -438,7 +401,7 @@ public class HexMapGenerator : MonoBehaviour
 		}
 
 		var target = candidates[Random.Range(0, candidates.Count)];
-		ListPool<HexCell>.Add(candidates);
+		ListPool<HexCell>.Refuse(candidates);
 		return target;
 	}
 
@@ -498,7 +461,7 @@ public class HexMapGenerator : MonoBehaviour
 			}
 		}
 
-		ListPool<HexCell>.Add(erodibleCells);
+		ListPool<HexCell>.Refuse(erodibleCells);
 	}
 
 

@@ -112,16 +112,10 @@ public class HexCellShaderData : MonoBehaviour
 		var index = cell.index;
 		var data = _cellTextureData[index];
 		var stillUpdating = false;
-		//if (cell.isExplored && data.g < 255)
-		//{
-		//	stillUpdating = true;
-		//	var t = data.g + delta;
-		//	data.g = t >= 255 ? (byte) 255 : (byte) t;
-		//}
 
 		var exploration = (byte)(data.g >> 4);
 		var owner = (byte)(data.g & 15);
-		if (cell.isExplored && exploration < 15 )
+		if (cell.isExploredByPlayer && exploration < 15 )
 		{
 			stillUpdating = true;
 			var t = exploration + delta;
@@ -169,7 +163,10 @@ public class HexCellShaderData : MonoBehaviour
 		if (immediateMode)
 		{
 			_cellTextureData[index].r = cell.isVisible ? (byte) 255 : (byte) 0;
-			_cellTextureData[index].g = cell.isExplored ? (byte) 255 : (byte) 0;
+
+			var owner = (byte)(_cellTextureData[index].g & 15);
+			var exploration = cell.isExploredByPlayer ? (byte)255 : (byte)0;
+			_cellTextureData[index].g = (byte)((exploration << 4) + owner);
 		}
 		else if (_cellTextureData[index].b != 255)
 		{
@@ -182,6 +179,9 @@ public class HexCellShaderData : MonoBehaviour
 
 	public void RefreshOwner(HexCell cell, int owner)
 	{
+		// In game we indicate a cell without owner as -1
+		// But in shader we indicate such cell as 0 due to bit trick
+		owner += 1;
 		var exploration = (byte) (_cellTextureData[cell.index].g >> 4);
 		_cellTextureData[cell.index].g = (byte)((exploration << 4) + owner);
 

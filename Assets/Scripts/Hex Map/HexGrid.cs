@@ -4,6 +4,7 @@ using Sirenix.Serialization;
 using System.IO;
 using UnityEngine;
 using Sirenix.Utilities;
+using System;
 
 public class HexGrid : SerializedMonoBehaviour
 {
@@ -13,6 +14,7 @@ public class HexGrid : SerializedMonoBehaviour
 	[OdinSerialize] public Vector2Int cellCount { get; private set; }
 	[OdinSerialize] public bool wrapping { get; private set; }
 	public bool hasPath => _currentPathExists;
+	public int cellTotalCount => cellCount.x * cellCount.y;
 
 
 	[SerializeField] private HexCell _cellPrefab;
@@ -390,8 +392,8 @@ public class HexGrid : SerializedMonoBehaviour
 		unit.location = location;
 		unit.orientation = orientation;
 
-		location.owner = unit.owner;
-		location.shaderData.RefreshOwner(location, unit.owner);
+		location.owner = unit.playerId;
+		location.shaderData.RefreshOwner(location, unit.playerId);
 	}
 
 
@@ -414,7 +416,7 @@ public class HexGrid : SerializedMonoBehaviour
 		_currentPathFrom = fromCell;
 		_currentPathTo = toCell;
 		_currentPathExists = Search(fromCell, toCell, unit);
-		ShowPath(unit.speed);
+		ShowPath(unit.speed, unit.remainingTravelBudget);
 	}
 
 
@@ -552,16 +554,16 @@ public class HexGrid : SerializedMonoBehaviour
 	}
 
 
-	public void IncreaseVisibility(HexCell fromCell, int range)
+	public void IncreaseVisibility(HexCell fromCell, int range, int playerId)
 	{
 		var cells = GetVisibleCells(fromCell, range);
 
 		foreach (var cell in cells)
 		{
-			cell.IncreaseVisibility();
+			cell.IncreaseVisibility(playerId);
 		}
 
-		ListPool<HexCell>.Add(cells);
+		ListPool<HexCell>.Refuse(cells);
 	}
 
 
@@ -574,11 +576,11 @@ public class HexGrid : SerializedMonoBehaviour
 			cell.DecreaseVisibility();
 		}
 
-		ListPool<HexCell>.Add(cells);
+		ListPool<HexCell>.Refuse(cells);
 	}
 
 
-	private void ShowPath(int speed)
+	private void ShowPath(int speed, int remainingBudget)
 	{
 		var startColor = new Color(0.32f, 0.46f, 1f);
 		var endColor = new Color(1f, 0.46f, 0.4f);
@@ -591,7 +593,7 @@ public class HexGrid : SerializedMonoBehaviour
 			var current = _currentPathTo;
 			while (current != _currentPathFrom)
 			{
-				var turn = (current.distance - 1) / speed;
+				var turn = (current.distance - 1 + (speed - remainingBudget)) / speed;
 				current.label = turn.ToString();
 				current.EnableHighlight(turn == 0 ? availableColor : remainingColor);
 				current = current.pathFrom;
@@ -654,9 +656,26 @@ public class HexGrid : SerializedMonoBehaviour
 		for (int i = 0; i < _units.Count; i++)
 		{
 			var unit = _units[i];
-			IncreaseVisibility(unit.location, unit.visionRange);
+			IncreaseVisibility(unit.location, unit.visionRange, unit.playerId);
 		}
 	}
 
+
+	public void RefreshVisibility()
+	{
+		for (var i = 0; i < _cells.Length; i++)
+		{
+			_cells[i].RefreshVisibility();
+		}
+	}
+
+
+	public void BindPlayersData(int playersCount)
+	{
+		for (int i = 0; i < _cells.Length; i++)
+		{
+			_cells[i].BindPlayersData(playersCount);
+		}
+	}
 
 }

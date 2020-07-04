@@ -42,10 +42,10 @@ public class HexCell : SerializedMonoBehaviour
 	public int columnIndex { get; set; }
 	public int distance { get; set; }
 	public int index { get; set; }
-	public int owner { get; set; }
+	public int owner { get; set; } = -1;
 
 
-	public bool isHasOwner => owner > 0;
+	public bool isHasOwner => owner > -1;
 
 
 	[ShowInInspector]
@@ -202,6 +202,9 @@ public class HexCell : SerializedMonoBehaviour
 		private set => _isExplored = value;
 	}
 
+	[ShowInInspector]
+	public bool isExploredByPlayer => _isExploredByPLayer[GameManager.currentPlayer.id] && isExplorable;
+
 
 	/// <summary>
 	/// Provides an access to it`s neighbors
@@ -272,6 +275,8 @@ public class HexCell : SerializedMonoBehaviour
 	private int _farmLevel;
 	private bool _walled;
 
+	private bool _isExplored;
+	private bool[] _isExploredByPLayer;
 
 
 	public bool IsRiverGoesThroughEdge(HexDirection direction) => isHasIncomingRiver && incomingRiverDirection == direction || isHasOutgoingRiver && outgoingRiverDirection == direction;
@@ -281,9 +286,10 @@ public class HexCell : SerializedMonoBehaviour
 	public bool IsRoadGoesThroughEdge(HexDirection direction) => roads[(int) direction];
 	
 	
-	public void IncreaseVisibility()
+	public void IncreaseVisibility(int playerId)
 	{
 		_visibility++;
+		_isExploredByPLayer[playerId] = true;
 
 		if (_visibility == 1)
 		{
@@ -585,8 +591,6 @@ public class HexCell : SerializedMonoBehaviour
 	[SerializeField, UsedImplicitly]
 	private TextMeshPro _label;
 
-	private bool _isExplored;
-
 	public string label
 	{
 		get => _label.text;
@@ -625,6 +629,21 @@ public class HexCell : SerializedMonoBehaviour
 			_visibility = 0;
 			shaderData.RefreshVisibility(this);
 		}
+	}
+
+
+	public void RefreshVisibility()
+	{
+		var originalImmediateMode = shaderData.immediateMode;
+		shaderData.immediateMode = true;
+		shaderData.RefreshVisibility(this);
+		shaderData.immediateMode = originalImmediateMode;
+	}
+
+
+	public void BindPlayersData(int playersCount)
+	{
+		_isExploredByPLayer = new bool[playersCount];
 	}
 
 

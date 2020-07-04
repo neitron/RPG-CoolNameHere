@@ -42,6 +42,7 @@ public class NewMapMenu : MonoBehaviour
 		if (_generateMaps)
 		{
 			_mapGenerator.GenerateMap(x, z, _wrapMaps, _playerCount);
+			GameManager.NewGame(_playerCount, _hexGrid);
 		}
 		else
 		{

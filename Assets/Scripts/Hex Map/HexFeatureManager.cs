@@ -9,7 +9,7 @@ public class HexFeatureManager : SerializedMonoBehaviour
 {
 
 
-	[TableMatrix(IsReadOnly = false)]
+	
 	[OdinSerialize] private Transform[][] _urbanPrefabs;
 	[OdinSerialize] private Transform[][] _farmPrefabs;
 	[OdinSerialize] private Transform[][] _plantPrefabs;
