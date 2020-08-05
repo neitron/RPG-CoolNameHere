@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.AI;
 
 
 
@@ -203,7 +204,7 @@ public class HexCell : SerializedMonoBehaviour
 	}
 
 	[ShowInInspector]
-	public bool isExploredByPlayer => _isExploredByPLayer[GameManager.currentPlayer.id] && isExplorable;
+	public bool isExploredByPlayer => GameManager.currentPlayer is null ? isExplorable : _isExploredByPLayer[GameManager.currentPlayer.id] && isExplorable;
 
 
 	/// <summary>
@@ -603,6 +604,8 @@ public class HexCell : SerializedMonoBehaviour
 		get => _label.enabled;
 		set => _label.enabled = value;
 	}
+
+	public NavMeshSurface navMesh { get; set; }
 
 
 	public void DisableHighlight()

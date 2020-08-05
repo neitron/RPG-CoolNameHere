@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
-
-
+using UnityEngine.AI;
 
 public class HexGridChunk : MonoBehaviour
 {
 
 
 	[SerializeField, /*HideInInspector*/] private HexCell[] _cells;
+	//[SerializeField] private NavMeshSurface _navMesh;
 	[SerializeField] private HexFeatureManager _features;
 	[SerializeField] private HexMesh _waterShore;
 	[SerializeField] private HexMesh _estuaries;
@@ -19,9 +19,6 @@ public class HexGridChunk : MonoBehaviour
 	private static readonly Color _weights1 = new Color(1f, 0f, 0f, 1f);
 	private static readonly Color _weights2 = new Color(0f, 1f, 0f, 1f);
 	private static readonly Color _weights3 = new Color(0f, 0f, 1f, 1f);
-	//private static readonly Color _weights14 = new Color(1f, 0f, 0f, 0f);
-	//private static readonly Color _weights24 = new Color(0f, 1f, 0f, 0f);
-	//private static readonly Color _weights34 = new Color(0f, 0f, 1f, 0f);
 
 
 
@@ -81,6 +78,8 @@ public class HexGridChunk : MonoBehaviour
 			Triangulate(cell);
 		}
 
+		//BuildNavMesh();
+
 		_waterShore.Apply();
 		_estuaries.Apply();
 		_features.Apply();
@@ -88,6 +87,50 @@ public class HexGridChunk : MonoBehaviour
 		_rivers.Apply();
 		_roads.Apply();
 		_water.Apply();
+	}
+
+
+	private void BuildNavMesh()
+	{
+		//_navMesh.BuildNavMesh();
+
+		foreach (var cell in _cells)
+		{
+			if (cell.isUnderwater)
+				continue;
+
+			//for (var d = HexDirection.Ne; d <= HexDirection.Se; d++)
+			//{
+			//	var neighbor = cell[d];
+
+			//	if (neighbor is null || neighbor.isUnderwater)
+			//		continue;
+
+			//	if (cell.GetEdgeType(d) != HexEdgeType.Slope)
+			//		continue;
+
+			//	var c1 = cell.position;
+			//	var c2 = neighbor.position;
+
+			//	var e1 = new EdgeVertices(
+			//		c1 + HexMetrics.GetFirstSolidCorner(d),
+			//		c1 + HexMetrics.GetSecondSolidCorner(d));
+
+			//	var bridge = HexMetrics.GetBridge(d);
+			//	bridge.y = neighbor.position.y - cell.position.y;
+			//	var e2 = new EdgeVertices(
+			//		e1.v1 + bridge,
+			//		e1.v5 + bridge);
+
+			//	var link = _navMesh.gameObject.AddComponent<NavMeshLink>();
+			//	link.startPoint = HexMetrics.Perturb(Vector3.Lerp(e1.v3, c1, 0.2f) + Vector3.up * 0.1f);
+			//	link.endPoint = HexMetrics.Perturb(Vector3.Lerp(e2.v3, c2, 0.2f) + Vector3.up * 0.1f);
+
+			//	link.width = Vector3.Distance(e1.v1, e1.v5);
+			//	link.autoUpdate = false;
+			//	link.costModifier = 10000;
+			//}
+		}
 	}
 
 

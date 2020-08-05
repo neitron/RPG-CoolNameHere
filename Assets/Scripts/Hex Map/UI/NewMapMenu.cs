@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.AI;
 
 
 
@@ -8,8 +9,9 @@ public class NewMapMenu : MonoBehaviour
 
 	[SerializeField] private HexGrid _hexGrid;
 	[SerializeField] private HexMapGenerator _mapGenerator;
+	[SerializeField] private NavMeshSurface _navMeshSurface;
 	
-	
+
 	private Canvas _canvas;
 	private bool _generateMaps = true;
 	private bool _wrapMaps = true;
@@ -42,11 +44,16 @@ public class NewMapMenu : MonoBehaviour
 		if (_generateMaps)
 		{
 			_mapGenerator.GenerateMap(x, z, _wrapMaps, _playerCount);
+
+			//_navMeshSurface.BuildNavMesh();
+
 			GameManager.NewGame(_playerCount, _hexGrid);
 		}
 		else
 		{
 			_hexGrid.CreateMap(x, z, _wrapMaps);
+
+			_navMeshSurface.BuildNavMesh();
 		}
 
 		HexMapCamera.ValidatePosition();
