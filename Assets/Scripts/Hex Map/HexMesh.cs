@@ -1,6 +1,216 @@
-﻿using System;
+﻿using Geometry;
+using Neitron;
+using System;
 using System.Collections.Generic;
+using UniRx;
 using UnityEngine;
+
+
+
+namespace Neitron
+{
+
+
+	public static class DictionaryExtension
+	{
+		public static void Deconstruct<T1, T2>(this KeyValuePair<T1, T2> tuple, out T1 key, out T2 value)
+		{
+			key = tuple.Key;
+			value = tuple.Value;
+		}
+	}
+
+
+
+	class Vector3CoordComparer : IEqualityComparer<Vector3>
+	{
+		public bool Equals(Vector3 a, Vector3 b)
+		{
+			if (Mathf.Abs(a.x - b.x) > 0.001) return false;
+			if (Mathf.Abs(a.y - b.y) > 0.001) return false;
+			if (Mathf.Abs(a.z - b.z) > 0.001) return false;
+
+			return true; //indeed, very close
+		}
+
+		public int GetHashCode(Vector3 obj)
+		{
+			//a cruder than default comparison, allows to compare very close-vector3's into same hash-code.
+			return Math.Round(obj.x, 3).GetHashCode()
+				 ^ Math.Round(obj.y, 3).GetHashCode() << 2
+				 ^ Math.Round(obj.z, 3).GetHashCode() >> 2;
+		}
+	}
+
+
+
+	public class NavMesh
+	{
+
+
+		private List<NavChunk> _chunks;
+		// TODO: key is Vector3 which is the middle point of an edge, I need to replace it with Edge class
+		private Dictionary<Vector3, HashSet<Triangle>> _adjuscentTriangles;
+
+		
+
+		public NavMesh()
+		{
+			_chunks = new List<NavChunk>();
+			_adjuscentTriangles = new Dictionary<Vector3, HashSet<Triangle>>(new Vector3CoordComparer());
+		}
+
+
+		public void Add(NavChunk chunk)
+		{
+			_chunks.Add(chunk);
+		}
+
+
+		internal void Add(NavChunk chunk, HashSet<Triangle> triangles)
+		{
+			foreach (var t in triangles)
+			{
+				AddTriangleToLinkedList(t);
+			}
+		}
+
+
+		private void AddTriangleToLinkedList(Triangle t)
+		{
+			// By AB edge
+			if (_adjuscentTriangles.TryGetValue(t.ab, out var tris))
+			{
+				AddTriangleNeighbors(t, tris);
+				tris.Add(t);
+			}
+			else
+				_adjuscentTriangles.Add(t.ab, new HashSet<Triangle> { t });
+
+			// By BC edge
+			if (_adjuscentTriangles.TryGetValue(t.bc, out tris))
+			{
+				AddTriangleNeighbors(t, tris);
+				tris.Add(t);
+			}
+			else
+				_adjuscentTriangles.Add(t.bc, new HashSet<Triangle> { t });
+
+			// By CA edge
+			if (_adjuscentTriangles.TryGetValue(t.ca, out tris))
+			{
+				AddTriangleNeighbors(t, tris);
+				tris.Add(t);
+			}
+			else
+				_adjuscentTriangles.Add(t.ca, new HashSet<Triangle> { t });
+		}
+
+
+		private void AddTriangleNeighbors(Triangle t, HashSet<Triangle> neighbors)
+		{
+			foreach (var n in neighbors)
+			{
+				t.neighbours.Add(n);
+				n.neighbours.Add(t);
+			}
+		}
+
+
+		internal void Clear()
+		{
+			foreach (var chunk in _chunks)
+			{
+				chunk.Clear();
+			}
+			_chunks.Clear();
+		}
+
+
+	}
+
+
+
+	public class NavChunk
+	{
+
+
+		private HashSet<Triangle> _triangles;
+		private NavMesh _navMesh;
+
+
+
+		public NavChunk(NavMesh navMesh)
+		{
+			_navMesh = navMesh;
+			_triangles = new HashSet<Triangle>();
+		}
+
+
+		public void Apply()
+		{
+			_navMesh.Add(this, _triangles);
+		}
+
+
+		public void Clear()
+		{
+			// It may have references to triangles in neighbor chunks
+			foreach (var t in _triangles)
+			{
+				// We just remove the trianfle from all its neighbors
+				foreach (var n in t.neighbours)
+				{
+					n.neighbours.Remove(t);
+				}
+			}
+			// No need to remove neighbor refs from this triangles cuz we delete all of them
+			_triangles.Clear();
+		}
+
+
+		public void AddTriangle(Vector3 v0, Vector3 v1, Vector3 v2)
+		{
+			var triangle = Triangle.Create(HexMetrics.Perturb(v0), HexMetrics.Perturb(v1), HexMetrics.Perturb(v2));
+			_triangles.Add(triangle);
+		}
+
+
+		public void AddQuad(Vector3 v0, Vector3 v1, Vector3 v2, Vector3 v3)
+		{
+			AddTriangle(v0, v2, v1);
+			AddTriangle(v1, v2, v3);
+		}
+
+
+		internal bool Intersect(Ray ray, out RaycastHit hit, out Triangle triangle)
+		{
+			hit = default;
+			triangle = default;
+			foreach (var t in _triangles)
+			{
+				//DebugExtension.DrawTriangle(t, Color.white * 0.2f, 0.015f);
+				if (t.Intersect(ray, out hit, true))
+				{
+					// TODO: We overr
+					triangle = t;
+					return true;
+				}
+			}
+
+			if (triangle != null)
+				return true;
+
+			return false;
+		}
+
+
+	}
+
+
+}
+
+
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class HexMesh : MonoBehaviour
@@ -27,6 +237,9 @@ public class HexMesh : MonoBehaviour
 
 
 
+	public Bounds bounds => _mesh.bounds;
+
+
 	public void Init()
 	{
 		_mesh = new Mesh
@@ -41,8 +254,6 @@ public class HexMesh : MonoBehaviour
 			_meshCollider = gameObject.AddComponent<MeshCollider>();
 		}
 	}
-	
-
 	
 
 

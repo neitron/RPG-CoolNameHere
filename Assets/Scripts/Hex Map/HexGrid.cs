@@ -3,8 +3,8 @@ using Sirenix.OdinInspector;
 using Sirenix.Serialization;
 using System.IO;
 using UnityEngine;
-using Sirenix.Utilities;
-using System;
+using Geometry;
+using Neitron;
 
 public class HexGrid : SerializedMonoBehaviour
 {
@@ -38,6 +38,8 @@ public class HexGrid : SerializedMonoBehaviour
 	private HexCell _currentPathTo;
 	private bool _currentPathExists;
 	private List<HexUnit> _units = new List<HexUnit>();
+
+	private NavMesh _navMesh = new NavMesh();
 
 
 	public HexCell this[Vector3 position] =>
@@ -102,6 +104,7 @@ public class HexGrid : SerializedMonoBehaviour
 				Destroy(_columns[i].gameObject);
 			}
 		}
+		_navMesh.Clear();
 
 		cellCount = new Vector2Int(x, z);
 		wrapping = wrapMap;
@@ -145,7 +148,9 @@ public class HexGrid : SerializedMonoBehaviour
 			for (var x = 0; x < _chunkCount.x; x++)
 			{
 				var chunk = _chunks[index++] = Instantiate(_chunkPrefab, _columns[x], false);
-				chunk.Init();
+				var navChunk = new NavChunk(_navMesh);
+				_navMesh.Add(navChunk);
+				chunk.Init(navChunk);
 			}
 		}
 	}
@@ -316,6 +321,7 @@ public class HexGrid : SerializedMonoBehaviour
 		}
 	}
 
+
 	public void Load(BinaryReader reader, int header)
 	{
 		ClearPath();
@@ -371,6 +377,33 @@ public class HexGrid : SerializedMonoBehaviour
 			return this[hit.point];
 		}
 		return null;
+	}
+
+
+	public bool NavMeshRaycast(Ray ray, out RaycastHit hit, out Triangle triangle)
+	{
+		triangle = null;
+		hit = default;
+		foreach (var chunk in _chunks)
+		{
+			if(chunk.bounds.IntersectRay(ray))
+			{
+				DebugExtension.DrawBounds(chunk.bounds, Color.yellow, 0.015f);
+				// TODO: Look for in chunk intersaction
+				if (chunk.NavMeshRaycast(ray, out hit, out triangle))
+				{
+					//DebugExtension.DrawShape(new []{ triangle.a, triangle.b, triangle.c}, Color.red, 0.015f);
+					//DebugExtension.DrawPoint(hit.point, 0.1f, Color.red, 0.015f);
+					return true;
+				}
+			}
+			else
+			{
+				DebugExtension.DrawBounds(chunk.bounds, Color.green, 0.015f);
+			}
+		}
+
+		return false;
 	}
 
 

@@ -3,7 +3,238 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+
+
+
+namespace Geometry
+{
+
+
+	public static class Math2d
+	{
+		public static bool LineSegmentsIntersection(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, out Vector2 intersection)
+		{
+			intersection = Vector2.zero;
+
+			var d = (p2.x - p1.x) * (p4.y - p3.y) - (p2.y - p1.y) * (p4.x - p3.x);
+
+			if (d == 0.0f)
+			{
+				return false;
+			}
+
+			var u = ((p3.x - p1.x) * (p4.y - p3.y) - (p3.y - p1.y) * (p4.x - p3.x)) / d;
+			var v = ((p3.x - p1.x) * (p2.y - p1.y) - (p3.y - p1.y) * (p2.x - p1.x)) / d;
+
+			if (u < 0.0f || u > 1.0f || v < 0.0f || v > 1.0f)
+			{
+				return false;
+			}
+
+			intersection.x = p1.x + u * (p2.x - p1.x);
+			intersection.y = p1.y + u * (p2.y - p1.y);
+
+			return true;
+		}
+	}
+
+
+	public class Triangle
+	{
+
+		public Vector3 a;
+		public Vector3 b;
+		public Vector3 c;
+
+		public Vector3 ab => (a + b) * 0.5f;
+		public Vector3 bc => (b + c) * 0.5f;
+		public Vector3 ca => (c + a) * 0.5f;
+
+		public readonly HashSet<Triangle> neighbours = new HashSet<Triangle>();
+		public float gCost;
+		public float hCost;
+		public float fCost;
+		public Triangle parent;
+
+
+		public Vector3 circumcenter;
+		public float radiusSquared;
+
+
+		internal Vector3 normal => Vector3.Cross(b - a, c - a).normalized;
+
+		public bool isCompleted { get; set; } = false;
+		public Vector3 avgCenter => (a + b + c) / 3f;
+
+
+
+		public static Triangle Create(Vector3 point1, Vector3 point2, Vector3 point3)
+		{
+			Triangle triangle = new Triangle();
+
+			if (point1 == point2 || point1 == point3 || point2 == point3)
+			{
+				throw new ArgumentException("Must be 3 distinct points");
+			}
+
+			triangle.a = point1;
+			if (IsCounterClockwise(point1, point2, point3))
+			{
+				triangle.b = point3;
+				triangle.c = point2;
+			}
+			else
+			{
+				triangle.b = point2;
+				triangle.c = point3;
+			}
+
+			return triangle;
+		}
+
+
+		private static bool IsCounterClockwise(Vector3 point1, Vector3 point2, Vector3 point3)
+		{
+			var result =
+				(point2.x - point1.x) * (point3.z - point1.z) -
+				(point3.x - point1.x) * (point2.z - point1.z);
+			return result > 0;
+		}
+
+
+		private Triangle()
+		{ }
+
+
+		static float Sign(Vector2 p1, Vector2 p2, Vector2 p3)
+		{
+			return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+		}
+
+
+		private bool IsPointerInside(Vector2 pt, Vector2 v1, Vector2 v2, Vector2 v3)
+		{
+			bool hasNeg, hasPos;
+
+			var d1 = Sign(pt, v1, v2);
+			var d2 = Sign(pt, v2, v3);
+			var d3 = Sign(pt, v3, v1);
+
+			hasNeg = (d1 < 0) || (d2 < 0) || (d3 < 0);
+			hasPos = (d1 > 0) || (d2 > 0) || (d3 > 0);
+
+			return !(hasNeg && hasPos);
+		}
+
+
+		internal bool Intersect(Ray ray, out RaycastHit hit, bool isBackfaceCulled)
+		{
+			hit = default;
+			Vector3 ab = b - a;
+			Vector3 ac = c - a;
+			Vector3 pvec = Vector3.Cross(ray.direction, ac);
+			float det = Vector3.Dot(ab, pvec);
+
+			// CULLING
+			if (isBackfaceCulled)
+			{
+				// if the determinant is negative the triangle is backfacing
+				// if the determinant is close to 0, the ray misses the triangle
+				if (det < float.Epsilon) return false;
+			}
+			else
+			{
+				// ray and triangle are parallel if det is close to 0
+				if (Mathf.Abs(det) < float.Epsilon)
+					return false;
+			}
+			
+			float invDet = 1 / det;
+
+			Vector3 tvec = ray.origin - a;
+			var u = Vector3.Dot(tvec, pvec) * invDet;
+			if (u < 0 || u > 1)
+				return false;
+
+			Vector3 qvec = Vector3.Cross(tvec, ab);
+			var v = Vector3.Dot(ray.direction, qvec) * invDet;
+			if (v < 0 || u + v > 1)
+				return false;
+
+			var t = Vector3.Dot(ac, qvec) * invDet;
+			hit = new RaycastHit()
+			{
+				point = ray.GetPoint(t)
+			}; 
+			
+			//Debug.DrawLine(a, ray.GetPoint(t), Color.magenta);
+			//Debug.DrawRay(a, ab, Color.green);
+			//Debug.DrawRay(a, ac, Color.red); //
+			//Debug.DrawRay(a, pvec, Color.yellow); // 
+			//Debug.DrawRay(a, tvec, Color.blue); // 
+			//Debug.DrawRay(a, qvec, Color.cyan);
+
+			return true;
+		}
+
+
+		// TODO: vertices have to be sorted
+		public static float SquaredArea(Vector3 a, Vector3 b, Vector3 c)
+		{
+			return (b.x - a.x) * (c.z - a.z) - (b.z - a.z) * (c.x - a.x);
+		}
+
+
+		public bool IsContainEdge(Vector3 edgeMid)
+		{
+			return 
+				(edgeMid - ab).sqrMagnitude <= 0.000_001f || 
+				(edgeMid - bc).sqrMagnitude <= 0.000_001f || 
+				(edgeMid - ca).sqrMagnitude <= 0.000_001f;
+		}
+
+		internal Portal 
+			GetPortal(Triangle neighbor)
+		{
+			Portal portal = default;
+			if (IsContainEdge(neighbor.ab))
+			{
+				portal.right = neighbor.a;
+				portal.left = neighbor.b;
+			}
+			else if (IsContainEdge(neighbor.bc))
+			{
+				portal.right = neighbor.b;
+				portal.left = neighbor.c;
+			}
+			else if (IsContainEdge(neighbor.ca))
+			{
+				portal.right = neighbor.c;
+				portal.left = neighbor.a;
+			}
+
+			var port = (portal.left - portal.right).normalized * 1.5f;
+
+			portal.leftShort =  portal.left - port;
+			portal.rightShort =  portal.right + port;
+
+			return portal;
+		}
+	}
+
+
+}
+
+
+public struct Portal
+{
+	public Vector3 right;
+	public Vector3 left;
+	public Vector3 rightShort;
+	public Vector3 leftShort;
+}
 
 
 
@@ -143,7 +374,7 @@ public class DelaunayTriangulation : MonoBehaviour
 	}
 
 
-	class Triangle
+	public class Triangle
 	{
 		private static Stack<Triangle> _triangles = new Stack<Triangle>(n);
 		public Vector2 a;
@@ -153,6 +384,9 @@ public class DelaunayTriangulation : MonoBehaviour
 		public Vector2 circumcenter;
 		public float radiusSquared;
 
+		public bool isCompleted { get; set; } = false;
+
+
 
 		static Triangle()
 		{
@@ -161,9 +395,6 @@ public class DelaunayTriangulation : MonoBehaviour
 				_triangles.Push(new Triangle());
 			}
 		}
-
-
-		public bool isCompleted { get; set; } = false;
 
 
 		public static Triangle Get(Vector2 point1, Vector2 point2, Vector2 point3)
@@ -193,9 +424,8 @@ public class DelaunayTriangulation : MonoBehaviour
 
 
 		private Triangle()
-		{
-			
-		}
+		{ }
+
 
 		private void Init(Vector2 point1, Vector2 point2, Vector2 point3)
 		{
@@ -299,7 +529,76 @@ public class DelaunayTriangulation : MonoBehaviour
 			return !(hasNeg && hasPos);
 		}
 
+		internal bool Intersect(Ray ray)
+		{
+			return false;
+//			Vector3 v0v1 = b - a;
+//			Vector3 v0v2 = c - a;
+//			Vector3 pvec = Vector3.Cross(ray.direction, v0v2);
+//			float det = Vector3.Dot(v0v1, pvec);
 
+//#if CULLING 
+//			// if the determinant is negative the triangle is backfacing
+//			// if the determinant is close to 0, the ray misses the triangle
+//			if (det < kEpsilon) return false;
+//#else
+//			// ray and triangle are parallel if det is close to 0
+//			if (Mathf.Abs(det) < float.Epsilon) 
+//				return false;
+//#endif
+
+//			float invDet = 1 / det;
+
+//			Vector3 tvec = ray.origin - a; //TODO:  Convert 2d deloune to 3d
+//			var u = Vector3.Dot(tvec, pvec) * invDet;
+//			if (u < 0 || u > 1) 
+//				return false;
+
+//			Vector3 qvec = Vector3.Cross(tvec, v0v1);
+//			var v = Vector3.Dot(ray.direction, qvec) * invDet;
+//			if (v < 0 || u + v > 1) 
+//				return false;
+
+//			var t = Vector3.Dot(v0v2, qvec) * invDet;
+
+//			return true;
+		}
+
+
+		/*
+		 * bool rayTriangleIntersect( 
+    const Vec3f &orig, const Vec3f &dir, //RAY
+    const Vec3f &v0, const Vec3f &v1, const Vec3f &v2, //TRIANGLE
+    float &t, float &u, float &v) //
+{ 
+#ifdef MOLLER_TRUMBORE 
+    
+#ifdef CULLING 
+    // if the determinant is negative the triangle is backfacing
+    // if the determinant is close to 0, the ray misses the triangle
+    if (det < kEpsilon) return false; 
+#else 
+    // ray and triangle are parallel if det is close to 0
+    if (fabs(det) < kEpsilon) return false; 
+#endif 
+    float invDet = 1 / det; 
+ 
+    Vec3f tvec = orig - v0; 
+    u = tvec.dotProduct(pvec) * invDet; 
+    if (u < 0 || u > 1) return false; 
+ 
+    Vec3f qvec = tvec.crossProduct(v0v1); 
+    v = dir.dotProduct(qvec) * invDet; 
+    if (v < 0 || u + v > 1) return false; 
+ 
+    t = v0v2.dotProduct(qvec) * invDet; 
+ 
+    return true; 
+#else 
+    ... 
+#endif 
+} 
+		*/
 	}
 
 

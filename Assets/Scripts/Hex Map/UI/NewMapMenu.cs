@@ -43,17 +43,13 @@ public class NewMapMenu : MonoBehaviour
 	{
 		if (_generateMaps)
 		{
-			_mapGenerator.GenerateMap(x, z, _wrapMaps, _playerCount);
-
-			//_navMeshSurface.BuildNavMesh();
-
+			_mapGenerator.GenerateMap(x, z, _wrapMaps);
+			
 			GameManager.NewGame(_playerCount, _hexGrid);
 		}
 		else
 		{
 			_hexGrid.CreateMap(x, z, _wrapMaps);
-
-			_navMeshSurface.BuildNavMesh();
 		}
 
 		HexMapCamera.ValidatePosition();

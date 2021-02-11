@@ -2566,10 +2566,10 @@ MonoBehaviour:
       Data: UnityEngine.Vector2Int, UnityEngine.CoreModule
     - Name: 
       Entry: 3
-      Data: 80
+      Data: 5
     - Name: 
       Entry: 3
-      Data: 60
+      Data: 5
     - Name: 
       Entry: 8
       Data: 
@@ -4809,6 +4809,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _hexGrid: {fileID: 165097050}
   _mapGenerator: {fileID: 1456942251}
+  _navMeshSurface: {fileID: 0}
 --- !u!1 &307170388
 GameObject:
   m_ObjectHideFlags: 0
@@ -11543,7 +11544,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -131588.5, y: 2782670}
+  m_AnchoredPosition: {x: -138584, y: 2933340}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 1}
 --- !u!114 &800077185
@@ -22110,7 +22111,7 @@ MonoBehaviour:
   m_HandleRect: {fileID: 1253461717}
   m_Direction: 2
   m_Value: 1
-  m_Size: 1
+  m_Size: 0.37037036
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:

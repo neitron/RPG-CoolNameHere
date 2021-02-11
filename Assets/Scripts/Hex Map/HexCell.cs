@@ -605,8 +605,6 @@ public class HexCell : SerializedMonoBehaviour
 		set => _label.enabled = value;
 	}
 
-	public NavMeshSurface navMesh { get; set; }
-
 
 	public void DisableHighlight()
 	{

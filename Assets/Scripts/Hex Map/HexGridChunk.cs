@@ -1,12 +1,14 @@
-﻿using UnityEngine;
-using UnityEngine.AI;
+﻿using Neitron;
+using System;
+using UnityEngine;
+
+
 
 public class HexGridChunk : MonoBehaviour
 {
 
 
-	[SerializeField, /*HideInInspector*/] private HexCell[] _cells;
-	//[SerializeField] private NavMeshSurface _navMesh;
+	[SerializeField] private HexCell[] _cells;
 	[SerializeField] private HexFeatureManager _features;
 	[SerializeField] private HexMesh _waterShore;
 	[SerializeField] private HexMesh _estuaries;
@@ -15,14 +17,17 @@ public class HexGridChunk : MonoBehaviour
 	[SerializeField] private HexMesh _roads;
 	[SerializeField] private HexMesh _water;
 
+	private NavChunk _navMesh;
 
 	private static readonly Color _weights1 = new Color(1f, 0f, 0f, 1f);
 	private static readonly Color _weights2 = new Color(0f, 1f, 0f, 1f);
 	private static readonly Color _weights3 = new Color(0f, 0f, 1f, 1f);
 
 
+	public Bounds bounds => _terrain.bounds;
 
-	public void Init()
+
+	public void Init(NavChunk navChunk)
 	{
 		_cells = new HexCell[HexMetrics.CHUNK_SIZE_X * HexMetrics.CHUNK_SIZE_Z];
 
@@ -33,6 +38,8 @@ public class HexGridChunk : MonoBehaviour
 		_rivers.Init();
 		_roads.Init();
 		_water.Init();
+
+		_navMesh = navChunk;
 	}
 
 
@@ -78,8 +85,6 @@ public class HexGridChunk : MonoBehaviour
 			Triangulate(cell);
 		}
 
-		//BuildNavMesh();
-
 		_waterShore.Apply();
 		_estuaries.Apply();
 		_features.Apply();
@@ -87,49 +92,63 @@ public class HexGridChunk : MonoBehaviour
 		_rivers.Apply();
 		_roads.Apply();
 		_water.Apply();
+
+		TriangulateNavMesh();
+	}
+
+
+	private void TriangulateNavMesh()
+	{
+		_navMesh.Clear();
+		BuildNavMesh();
+		_navMesh.Apply();
 	}
 
 
 	private void BuildNavMesh()
 	{
-		//_navMesh.BuildNavMesh();
-
 		foreach (var cell in _cells)
 		{
 			if (cell.isUnderwater)
 				continue;
 
-			//for (var d = HexDirection.Ne; d <= HexDirection.Se; d++)
-			//{
-			//	var neighbor = cell[d];
+			// Add cell to the nav mesh with its neighbor conections
+			GetFlatTriangulatation(cell);
+		}
+	}
 
-			//	if (neighbor is null || neighbor.isUnderwater)
-			//		continue;
 
-			//	if (cell.GetEdgeType(d) != HexEdgeType.Slope)
-			//		continue;
+	private void GetFlatTriangulatation(HexCell cell)
+	{
+		for (var d = HexDirection.Ne; d <= HexDirection.Nw; d++)
+		{
+			var center = cell.position;
+			var e = new EdgeVertices(
+				center + HexMetrics.GetFirstSolidCorner(d),
+				center + HexMetrics.GetSecondSolidCorner(d));
 
-			//	var c1 = cell.position;
-			//	var c2 = neighbor.position;
+			// Edge fan
+			_navMesh.AddTriangle(center, e.v1, e.v5);
 
-			//	var e1 = new EdgeVertices(
-			//		c1 + HexMetrics.GetFirstSolidCorner(d),
-			//		c1 + HexMetrics.GetSecondSolidCorner(d));
+			var direction = d;
+			var e1 = e;
+			if (d <= HexDirection.Se)
+			{
+				var neighbor = cell[direction];
+				if (neighbor == null)
+					continue;
 
-			//	var bridge = HexMetrics.GetBridge(d);
-			//	bridge.y = neighbor.position.y - cell.position.y;
-			//	var e2 = new EdgeVertices(
-			//		e1.v1 + bridge,
-			//		e1.v5 + bridge);
+				var bridge = HexMetrics.GetBridge(direction);
+				bridge.y = neighbor.position.y - cell.position.y;
+				var e2 = new EdgeVertices(
+					e1.v1 + bridge,
+					e1.v5 + bridge);
 
-			//	var link = _navMesh.gameObject.AddComponent<NavMeshLink>();
-			//	link.startPoint = HexMetrics.Perturb(Vector3.Lerp(e1.v3, c1, 0.2f) + Vector3.up * 0.1f);
-			//	link.endPoint = HexMetrics.Perturb(Vector3.Lerp(e2.v3, c2, 0.2f) + Vector3.up * 0.1f);
-
-			//	link.width = Vector3.Distance(e1.v1, e1.v5);
-			//	link.autoUpdate = false;
-			//	link.costModifier = 10000;
-			//}
+				if (cell.GetEdgeType(direction) != HexEdgeType.Cliff)
+				{
+					_navMesh.AddQuad(e1.v1, e1.v5, e2.v1, e2.v5);
+				}
+			}
 		}
 	}
 
@@ -377,6 +396,12 @@ public class HexGridChunk : MonoBehaviour
 				new Vector2(1f, 0f), new Vector2(1.5f, -0.2f)
 			);
 		}
+	}
+
+
+	public bool NavMeshRaycast(Ray ray, out RaycastHit hit, out Geometry.Triangle triangle)
+	{
+		return _navMesh.Intersect(ray, out hit, out triangle);
 	}
 
 

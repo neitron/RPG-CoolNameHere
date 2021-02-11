@@ -175,7 +175,7 @@ public class HexMapGenerator : MonoBehaviour
 	};
 
 
-	public void GenerateMap(int x, int z, bool wrapping, int playersCount)
+	public void GenerateMap(int x, int z, bool wrapping)
 	{
 		var originalRandomState = Random.state;
 		if (!_fixedSeed.enabled)

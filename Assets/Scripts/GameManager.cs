@@ -3,6 +3,8 @@ using System;
 using UniRx;
 using UnityEngine;
 
+
+
 public class GameManager : MonoSingleton<GameManager>
 {
 
@@ -13,6 +15,7 @@ public class GameManager : MonoSingleton<GameManager>
 	private IDisposable _currentPlayerUpdate;
 	public static IPlayer currentPlayer => instance._currentTurnPlayer;
 	private HexGrid _grid;
+
 
 
 	public static void NewGame(int playerCount, HexGrid hexGrid)

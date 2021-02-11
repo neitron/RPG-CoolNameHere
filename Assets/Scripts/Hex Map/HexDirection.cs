@@ -1,11 +1,29 @@
-﻿public enum HexDirection
+﻿// https://catlikecoding.com/unity/tutorials/hex-map/part-2/cell-neighbors/directions.png
+public enum HexDirection
 {
-	
+	/// <summary>
+	/// Top - Right
+	/// </summary>
 	Ne,
+	/// <summary>
+	/// Right
+	/// </summary>
 	E,
+	/// <summary>
+	/// Bottom - Right
+	/// </summary>
 	Se,
+	/// <summary>
+	/// Bottom - Left
+	/// </summary>
 	Sw,
+	/// <summary>
+	/// Left
+	/// </summary>
 	W,
+	/// <summary>
+	/// Top - Left
+	/// </summary>
 	Nw
 
 }
